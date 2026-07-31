@@ -1,0 +1,1 @@
+Artificial Intelligence (AI) enables computers to perform tasks that typically require human intelligence, such as learning, reasoning, and decision-making. Machine Learning is a subset of AI where models improve their performance by learning from data instead of following explicitly programmed rules.
