@@ -87,25 +87,18 @@ class ConsistencyBenchmark(Benchmark):
 
             "model": self.llm.get_model_name(),
 
+            "score": round(consistency_score * 100, 2),
+
+            "latency": round(sum(latencies) / len(latencies), 4),
+
             "total_iterations": iterations,
 
             "total_time": time.perf_counter() - experiment_start,
 
             "metrics": metrics_summary,
 
-            # "consistency_score": round(consistency_score, 4),
-            "primary_metric": { "name": "Consistency", 
-                               "score": round(consistency_score, 4)
-                               },
-
-            "average_latency": round(
-                sum(latencies) / len(latencies), 
-                4
-            ),
-
             "results": results
-
-        }
+    }
 
     def calculate_consistency(self, summaries):
         if len(summaries) < 2:

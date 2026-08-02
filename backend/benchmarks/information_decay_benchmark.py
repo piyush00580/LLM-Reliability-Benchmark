@@ -160,12 +160,12 @@ class InformationDecayBenchmark(Benchmark):
 
             "metrics": average_metrics,
 
-            "primary_metric": {
-                "name": "Information Decay",
-                "score": average_metrics["SimilarityEvaluator"]["average"]
-                },
+            "score": round(
+                            average_metrics["SimilarityEvaluator"]["average"] * 100,
+                            2
+            ),
 
-            "average_latency": average_latency,
+            "latency": round(average_latency, 4),
 
             "results": results
 

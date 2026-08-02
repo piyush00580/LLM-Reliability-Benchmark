@@ -55,3 +55,6 @@ class GeminiService(LLMService):
                 "Generation failed due to Gemini API error.",
                 time.perf_counter() - start
                 )
+
+    def get_model_name(self):
+        return self.model_name

@@ -10,7 +10,7 @@ class PlatformRunner:
         self.comparison_service = ComparisonService()
         self.reliability_service = ReliabilityService()
 
-    def run(self, text, llm_services):
+    def run(self, text, llm_services, benchmark_classes=None):
 
         platform_results = {}
 
@@ -21,7 +21,8 @@ class PlatformRunner:
                 "overall_reliability": None
             }
 
-        benchmark_classes = PluginManager.discover()
+        if benchmark_classes is None:
+            benchmark_classes = PluginManager.discover()
 
         for benchmark_class in benchmark_classes:
 

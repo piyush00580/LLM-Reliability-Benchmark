@@ -15,10 +15,9 @@ class ReliabilityService:
 
         for report in reports:
 
-            metric_name = report["primary_metric"]["name"]
-            score = report["primary_metric"]["score"]
-
             benchmark_name = report["benchmark"]
+            metric_name = benchmark_name
+            score = report["score"] / 100
 
             breakdown[benchmark_name] = round(score * 100, 2)
 

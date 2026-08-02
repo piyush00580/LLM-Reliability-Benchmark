@@ -102,15 +102,9 @@ class HallucinationBenchmark(Benchmark):
 
             "metrics": metrics_summary,
 
-            "primary_metric": {
+            "score": round(faithfulness_score * 100, 2),
 
-                "name": "Faithfulness",
-
-                "score": faithfulness_score
-
-            },
-
-            "average_latency": latency,
+            "latency": round(latency, 4),
 
             "results": [
 

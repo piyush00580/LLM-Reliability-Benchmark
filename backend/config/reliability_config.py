@@ -1,5 +1,6 @@
 RELIABILITY_WEIGHTS = {
-    "Information Decay": 0.40,
-    "Faithfulness": 0.40,
-    "Prompt Robustness": 0.20,
+    "Consistency": 0.25,
+    "Hallucination": 0.25,
+    "Information Decay": 0.25,
+    "Prompt Robustness": 0.25,
 }

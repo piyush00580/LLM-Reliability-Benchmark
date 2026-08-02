@@ -1,0 +1,62 @@
+.benchmark-container {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.section-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.section-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 17px;
+}
+
+.text-input {
+    width: 100%;
+    min-height: 180px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    resize: vertical;
+    font-size: 16px;
+    outline: none;
+}
+
+.text-input:focus {
+    border-color: #2563eb;
+}
+
+.run-button {
+    width: 100%;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.run-button:hover {
+    background: #1d4ed8;
+}

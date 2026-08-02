@@ -131,11 +131,9 @@ class PromptRobustnessBenchmark(Benchmark):
 
             "metrics": metrics_summary,
 
-            "primary_metric": { "name": "Prompt Robustness",
-                               "score": robustness_score
-                               },
+            "score": round(robustness_score * 100, 2),
 
-            "average_latency": sum(latencies) / len(latencies),
+            "latency": round(sum(latencies) / len(latencies), 4),
 
             "results": results
 
