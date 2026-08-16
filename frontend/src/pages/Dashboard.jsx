@@ -49,7 +49,7 @@ function Dashboard() {
             <div className="stats-grid">
 
                 <StatCard
-                    title="Total Benchmarks"
+                    title="Total Benchmarks Runs"
                     value={dashboard.total_runs}
                     icon={<FaPlayCircle />}
                     color="#2563eb"

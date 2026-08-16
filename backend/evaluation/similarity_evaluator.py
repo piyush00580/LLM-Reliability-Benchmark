@@ -9,10 +9,13 @@ class SimilarityEvaluator(EvaluationMetric):
         similarity = cos_sim(
             embedding1,
             embedding2
-        )
+        ).item()
+
+        # Convert cosine similarity from [-1, 1] to [0, 1]
+        normalized_similarity = (similarity + 1) / 2
 
         return {
-        "score": similarity.item(),
-        "unit": "cosine_similarity",
-        "higher_is_better": True
-    }
+            "score": normalized_similarity,
+            "unit": "cosine_similarity",
+            "higher_is_better": True
+        }

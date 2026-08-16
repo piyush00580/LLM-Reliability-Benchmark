@@ -1,0 +1,40 @@
+.reports-container {
+    padding: 30px;
+}
+
+.reports-container h1 {
+    font-size: 36px;
+    margin-bottom: 25px;
+}
+
+.reports-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.reports-card h2 {
+    margin-bottom: 20px;
+}
+
+.reports-card table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reports-card th,
+.reports-card td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.reports-card th {
+    background: #f3f4f6;
+    font-weight: 600;
+}
+
+.error-message {
+    color: red;
+}
