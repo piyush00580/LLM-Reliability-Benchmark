@@ -3,6 +3,13 @@ import axios from "axios";
 import Layout from "../components/layout/Layout";
 import "./Compare.css";
 
+const benchmarkDisplayNames = {
+    consistency: "Consistency",
+    hallucination: "Hallucination",
+    information_decay: "Information Retention",
+    prompt_robustness: "Prompt Robustness",
+};
+
 
 const normalizeBenchmark = (value) => {
     return String(value || "")
@@ -107,7 +114,10 @@ function Compare() {
             );
 
 
-            console.log("COMPARE RESPONSE:", response.data);
+            console.log(
+                            "COMPARE RESPONSE JSON:",
+                            JSON.stringify(response.data, null, 2)
+            );
 
 
             setResults(response.data);
@@ -242,7 +252,7 @@ function Compare() {
                                 }
                             />
 
-                            Information Decay
+                            Information Retention
 
                         </label>
 
@@ -348,16 +358,7 @@ function Compare() {
                                         .map((benchmark) => {
 
                                             const displayName =
-                                                benchmark
-                                                    .replaceAll(
-                                                        "_",
-                                                        " "
-                                                    )
-                                                    .replace(
-                                                        /\b\w/g,
-                                                        (char) =>
-                                                            char.toUpperCase()
-                                                    );
+                                                benchmarkDisplayNames[benchmark] || benchmark;
 
 
                                             return (
@@ -396,7 +397,7 @@ function Compare() {
 
 
                                                             const score =
-                                                                report?.primary_metric?.score;
+                                                                report?.score;
 
 
                                                             return (
@@ -407,12 +408,9 @@ function Compare() {
                                                                     }
                                                                 >
 
-                                                                    {score !==
-                                                                    undefined
-                                                                        ? `${Math.round(
-                                                                              score *
-                                                                                  100
-                                                                          )}%`
+                                                                    {score !== undefined
+                                                                        && score !== null
+                                                                        ? `${Math.round(score)}%`
                                                                         : "N/A"}
 
                                                                 </td>

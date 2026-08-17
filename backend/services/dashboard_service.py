@@ -87,6 +87,7 @@ class DashboardService:
 
         cursor.execute("""
             SELECT
+                id,
                 model,
                 benchmark,
                 score,
@@ -102,6 +103,7 @@ class DashboardService:
         recent_runs = [
 
             {
+                "id": row["id"],
                 "model": row["model"],
                 "benchmark": row["benchmark"],
                 "score": round(row["score"] * 100, 2),

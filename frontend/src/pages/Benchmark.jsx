@@ -193,7 +193,7 @@ function Benchmark() {
                                     toggleBenchmark("information_decay")
                                 }
                             />
-                            Information Decay
+                            Information Retention
                         </label>
 
                         <label className="checkbox-item">

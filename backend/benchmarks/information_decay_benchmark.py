@@ -150,7 +150,7 @@ class InformationDecayBenchmark(Benchmark):
 
         report = {
 
-            "benchmark": "Information Decay",
+            "benchmark": "Information Retention",
 
             "model": self.llm.get_model_name(),
 
