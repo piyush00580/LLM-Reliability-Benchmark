@@ -9,6 +9,9 @@ function Reports() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    const [selectedModel, setSelectedModel] = useState("All");
+    const [selectedBenchmark, setSelectedBenchmark] = useState("All");
+
     useEffect(() => {
 
         const fetchHistory = async () => {
@@ -36,6 +39,34 @@ function Reports() {
         fetchHistory();
 
     }, []);
+
+    const models = [
+        "All",
+        ...new Set(runs.map((run) => run.model))
+    ];
+
+    const benchmarks = [
+        "All",
+        ...new Set(runs.map((run) => run.benchmark))
+    ];
+
+    const filteredRuns = runs.filter((run) => {
+
+        const modelMatch =
+            selectedModel === "All" ||
+            run.model === selectedModel;
+
+        const benchmarkMatch =
+            selectedBenchmark === "All" ||
+            run.benchmark === selectedBenchmark;
+
+        return modelMatch && benchmarkMatch;
+    });
+
+    const resetFilters = () => {
+        setSelectedModel("All");
+        setSelectedBenchmark("All");
+    };
 
     return (
 
@@ -65,47 +96,152 @@ function Reports() {
 
                         <h2>Benchmark History</h2>
 
-                        <table>
+                        <button
+                            className="export-csv-button"
+                            onClick={() => {
 
-                            <thead>
-                                <tr>
-                                    <th>Model</th>
-                                    <th>Benchmark</th>
-                                    <th>Score</th>
-                                    <th>Latency</th>
-                                    <th>Timestamp</th>
-                                </tr>
-                            </thead>
+                                const params = new URLSearchParams();
 
-                            <tbody>
+                                if (selectedModel !== "All") {
+                                    params.append("model", selectedModel);
+                                }
 
-                                {runs.map((run) => (
+                                if (selectedBenchmark !== "All") {
+                                    params.append("benchmark", selectedBenchmark);
+                                }
 
-                                    <tr key={run.id}>
+                                const queryString = params.toString();
 
-                                        <td>{run.model}</td>
+                                const url =
+                                    "http://127.0.0.1:5000/api/export/csv" +
+                                    (queryString ? `?${queryString}` : "");
 
-                                        <td>{run.benchmark}</td>
+                                window.open(url, "_blank");
+                            }}
+                        >
+                            Export CSV
+                        </button>
 
-                                        <td>
-                                            {Math.round(run.score * 100)}%
-                                        </td>
+                        <div className="report-filters">
 
-                                        <td>
-                                            {run.latency}s
-                                        </td>
+                            <div className="filter-group">
 
-                                        <td>
-                                            {run.timestamp}
-                                        </td>
+                                <label>
+                                    Model
+                                </label>
 
+                                <select
+                                    value={selectedModel}
+                                    onChange={(e) =>
+                                        setSelectedModel(e.target.value)
+                                    }
+                                >
+
+                                    {models.map((model) => (
+                                        <option
+                                            key={model}
+                                            value={model}
+                                        >
+                                            {model}
+                                        </option>
+                                    ))}
+
+                                </select>
+
+                            </div>
+
+                            <div className="filter-group">
+
+                                <label>
+                                    Benchmark
+                                </label>
+
+                                <select
+                                    value={selectedBenchmark}
+                                    onChange={(e) =>
+                                        setSelectedBenchmark(e.target.value)
+                                    }
+                                >
+
+                                    {benchmarks.map((benchmark) => (
+                                        <option
+                                            key={benchmark}
+                                            value={benchmark}
+                                        >
+                                            {benchmark}
+                                        </option>
+                                    ))}
+
+                                </select>
+
+                            </div>
+
+                            <button
+                                className="reset-filter-button"
+                                onClick={resetFilters}
+                            >
+                                Reset Filters
+                            </button>
+
+                        </div>
+
+                        <p className="results-count">
+                            Showing {filteredRuns.length} of {runs.length} runs
+                        </p>
+
+                        {filteredRuns.length === 0 ? (
+
+                            <p>
+                                No runs match the selected filters.
+                            </p>
+
+                        ) : (
+
+                            <table>
+
+                                <thead>
+
+                                    <tr>
+                                        <th>Model</th>
+                                        <th>Benchmark</th>
+                                        <th>Score</th>
+                                        <th>Latency</th>
+                                        <th>Timestamp</th>
                                     </tr>
 
-                                ))}
+                                </thead>
 
-                            </tbody>
+                                <tbody>
 
-                        </table>
+                                    {filteredRuns.map((run) => (
+
+                                        <tr key={run.id}>
+
+                                            <td>{run.model}</td>
+
+                                            <td>{run.benchmark}</td>
+
+                                            <td>
+                                                {Math.round(run.score * 100)}%
+                                            </td>
+
+                                            <td>
+                                                {run.latency}s
+                                            </td>
+
+                                            <td>
+                                                {run.timestamp}
+                                            </td>
+
+                                        </tr>
+
+                                    ))}
+
+                                </tbody>
+
+                            </table>
+
+                        )}
 
                     </div>
 
@@ -114,7 +250,6 @@ function Reports() {
             </div>
 
         </Layout>
-
     );
 }
 

@@ -44,12 +44,13 @@ function Dashboard() {
 
     return (
         <Layout>
-            <h1>Dashboard</h1>
 
-            <div className="stats-grid">
+            <div className="dashboard-page">
+
+                <h1>LLM Reliability Dashboard</h1>
 
                 <StatCard
-                    title="Total Benchmarks Runs"
+                    title="Total Benchmarks"
                     value={dashboard.total_runs}
                     icon={<FaPlayCircle />}
                     color="#2563eb"

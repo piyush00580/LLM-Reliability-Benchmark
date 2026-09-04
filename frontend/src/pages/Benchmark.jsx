@@ -13,6 +13,7 @@ function Benchmark() {
         mock_average: false,
         mock_poor: false,
         gemini: false,
+        ollama: false
     });
 
     const [benchmarks, setBenchmarks] = useState({
@@ -147,6 +148,15 @@ function Benchmark() {
                                 onChange={() => toggleModel("gemini")}
                             />
                             Gemini (Cloud)
+                        </label>
+
+                        <label className="checkbox-item">
+                            <input
+                                type="checkbox"
+                                checked={models.ollama}
+                                onChange={() => toggleModel("ollama")}
+                            />
+                            Ollama (Local)
                         </label>
 
                     </div>

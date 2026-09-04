@@ -22,9 +22,11 @@ const normalizeBenchmark = (value) => {
 function Compare() {
 
     const [models, setModels] = useState({
-        mock_poor: true,
-        mock_average: true,
-        mock_excellent: true,
+        mock_poor: false,
+        mock_average: false,
+        mock_excellent: false,
+        gemini: false,
+        ollama: true,
     });
 
     const [benchmarks, setBenchmarks] = useState({
@@ -105,7 +107,7 @@ function Compare() {
 
 
             const response = await axios.post(
-                "http://127.0.0.1:5000/api/benchmark",
+                "http://127.0.0.1:5000/api/compare",
                 {
                     text,
                     models: selectedModels,
@@ -196,6 +198,35 @@ function Compare() {
                             />
 
                             Mock Excellent
+
+                        </label>
+
+                        <label>
+
+                            <input
+                                type="checkbox"
+                                checked={models.gemini}
+                                onChange={() =>
+                                    toggleModel("gemini")
+                                }
+                            />
+
+                            Gemini
+
+                        </label>
+
+
+                        <label>
+
+                            <input
+                                type="checkbox"
+                                checked={models.ollama}
+                                onChange={() =>
+                                    toggleModel("ollama")
+                                }
+                            />
+
+                            Llama 3.2 3B (Ollama)
 
                         </label>
 
@@ -390,9 +421,18 @@ function Compare() {
 
                                                             const report = reports.find((item) => {
                                                                 const reportName = normalizeBenchmark(item?.benchmark);
-                                                                const selectedName = normalizeBenchmark(benchmark);
 
-                                                                return reportName === selectedName;
+                                                                const benchmarkAliases = {
+                                                                    consistency: ["consistency"],
+                                                                    hallucination: ["hallucination"],
+                                                                    information_decay: [
+                                                                        "informationdecay",
+                                                                        "informationretention"
+                                                                    ],
+                                                                    prompt_robustness: ["promptrobustness"]
+                                                                };
+
+                                                                return benchmarkAliases[benchmark]?.includes(reportName);
                                                             });
 
 

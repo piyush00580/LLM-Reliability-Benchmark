@@ -1,4 +1,5 @@
 from services.gemini_service import GeminiService
+from services.ollama_service import OllamaService
 from services.mock_service import MockService
 from services.mock_excellent_service import MockExcellentService
 from services.mock_average_service import MockAverageService
@@ -14,6 +15,9 @@ class LLMFactory:
 
         if model_name == "gemini":
             return GeminiService()
+
+        elif model_name == "ollama":
+            return OllamaService()
 
         elif model_name == "mock":
             return MockService()
@@ -34,6 +38,7 @@ class LLMFactory:
 
         return [
             "gemini",
+            "ollama",
             "mock_excellent",
             "mock_average",
             "mock_poor"

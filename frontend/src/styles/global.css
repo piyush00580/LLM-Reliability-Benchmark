@@ -1,103 +1,121 @@
 @import "./variables.css";
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    font-family: "Segoe UI", sans-serif;
-    background: #f4f6fb;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--background);
+    color: var(--text-primary);
 }
 
-* {
-    box-sizing: border-box;
-}
-
-h1 {
+h1,
+h2,
+h3 {
     margin: 0;
 }
 
-.layout{
-    display:flex;
-    min-height:100vh;
+.layout {
+    display: flex;
+    min-height: 100vh;
 }
 
-.sidebar{
+/* =========================
+   Sidebar
+========================= */
 
-    width:240px;
+.sidebar {
+    width: 265px;
+    min-height: 100vh;
 
-    background:var(--sidebar);
+    background: var(--sidebar);
+    color: white;
 
-    color:white;
+    padding: 24px 16px;
 
-    padding:25px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
 
-.logo{
-
-    margin-bottom:40px;
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.sidebar nav{
+.sidebar a {
+    color: #cbd5e1;
 
-    display:flex;
+    padding: 12px 14px;
 
-    flex-direction:column;
+    border-radius: 9px;
 
-    gap:15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    text-decoration: none;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
-.sidebar a{
-
-    color:white;
-
-    padding:12px;
-
-    border-radius:8px;
-
-    display:flex;
-
-    align-items:center;
-
-    gap:10px;
-
-    transition:.2s;
+.sidebar a:hover {
+    background: var(--sidebar-hover);
+    color: white;
 }
 
-.sidebar a:hover{
-
-    background:rgba(255,255,255,.1);
+.sidebar a.active {
+    background: var(--primary);
+    color: white;
 }
 
-.sidebar a.active{
-
-    background:var(--primary);
+.sidebar a svg {
+    font-size: 17px;
 }
 
-.content{
+/* =========================
+   Main Content
+========================= */
 
-    flex:1;
+.content {
+    flex: 1;
+    min-width: 0;
 
-    display:flex;
-
-    flex-direction:column;
+    display: flex;
+    flex-direction: column;
 }
 
-.navbar{
+/* =========================
+   Navbar
+========================= */
 
-    background:white;
+.navbar {
+    background: white;
 
-    padding:20px 30px;
+    padding: 20px 36px;
 
-    box-shadow:var(--shadow);
+    border-bottom: 1px solid var(--border);
+
+    box-shadow: var(--shadow-sm);
 }
 
-.main-content{
+/* =========================
+   Page Content
+========================= */
 
-    flex:1;
+.main-content {
+    flex: 1;
 
-    padding:30px;
+    padding: 32px 38px;
 }

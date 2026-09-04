@@ -14,9 +14,6 @@ function Sidebar() {
 
         <aside className="sidebar">
 
-            <h2 className="logo">
-                LLM Bench
-            </h2>
 
             <nav>
 
