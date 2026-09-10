@@ -156,12 +156,12 @@ The platform calculates an overall reliability score from the supported benchmar
 
 Current weighting:
 
-| Benchmark | Weight |
-|---|---:|
-| Consistency | 25% |
-| Hallucination | 25% |
-| Information Retention | 25% |
-| Prompt Robustness | 25% |
+| Benchmark             | Weight |
+| --------------------- | -----: |
+| Consistency           |    25% |
+| Hallucination         |    25% |
+| Information Retention |    25% |
+| Prompt Robustness     |    25% |
 
 The resulting score provides a single high-level reliability indicator while still preserving the individual benchmark scores.
 
@@ -1011,3 +1011,4 @@ Expanded benchmark configuration
 Additional export formats
 
 These are future possibilities and are not represented as currently implemented features.
+```
