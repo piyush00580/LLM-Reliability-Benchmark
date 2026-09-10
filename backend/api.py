@@ -11,6 +11,60 @@ CORS(app)
 benchmark_service = BenchmarkService()
 history_service = BenchmarkHistoryService()
 
+VALID_MODELS = {
+    "gemini",
+    "ollama",
+    "mock_excellent",
+    "mock_average",
+    "mock_poor",
+}
+
+VALID_BENCHMARKS = {
+    "consistency",
+    "hallucination",
+    "information_decay",
+    "prompt_robustness",
+}
+
+
+def validate_request_data(data):
+    if not isinstance(data, dict):
+        return {"error": "Request body must be valid JSON."}
+
+    return None
+
+
+def validate_models(models):
+    invalid_models = [
+        model for model in models
+        if model not in VALID_MODELS
+    ]
+
+    if invalid_models:
+        return {
+            "error": "Unsupported model(s).",
+            "invalid_models": invalid_models,
+            "available_models": sorted(VALID_MODELS)
+        }
+
+    return None
+
+
+def validate_benchmarks(benchmarks):
+    invalid_benchmarks = [
+        benchmark for benchmark in benchmarks
+        if benchmark not in VALID_BENCHMARKS
+    ]
+
+    if invalid_benchmarks:
+        return {
+            "error": "Unsupported benchmark(s).",
+            "invalid_benchmarks": invalid_benchmarks,
+            "available_benchmarks": sorted(VALID_BENCHMARKS)
+        }
+
+    return None
+
 @app.route("/api/dashboard")
 def dashboard():
 
@@ -22,44 +76,76 @@ def dashboard():
 @app.route("/api/benchmark", methods=["POST"])
 def benchmark():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    validation_error = validate_request_data(data)
+
+    if validation_error:
+        return validation_error, 400
 
     text = data.get("text", "")
     models = data.get("models", [])
     benchmarks = data.get("benchmarks", [])
 
-    if not text.strip():
+    if not isinstance(text, str) or not text.strip():
         return {"error": "Text is required."}, 400
 
-    if not models:
-        return {"error": "Select at least one model"}, 400
+    if not isinstance(models, list) or not models:
+        return {"error": "Select at least one model."}, 400
 
-    if not benchmarks:
-        return {"error": "Select at least one benchmark"}, 400
+    if not isinstance(benchmarks, list) or not benchmarks:
+        return {"error": "Select at least one benchmark."}, 400
 
-    results = benchmark_service.run(text=text,
+    model_error = validate_models(models)
+
+    if model_error:
+        return model_error, 400
+
+    benchmark_error = validate_benchmarks(benchmarks)
+
+    if benchmark_error:
+        return benchmark_error, 400
+
+    results = benchmark_service.run(
+        text=text,
         models=models,
-        benchmarks=benchmarks)
+        benchmarks=benchmarks
+    )
 
     return jsonify(results)
 
 @app.route("/api/compare", methods=["POST"])
 def compare():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    validation_error = validate_request_data(data)
+
+    if validation_error:
+        return validation_error, 400
 
     text = data.get("text", "")
     models = data.get("models", [])
     benchmarks = data.get("benchmarks", [])
 
-    if not text.strip():
+    if not isinstance(text, str) or not text.strip():
         return {"error": "Text is required."}, 400
 
-    if len(models) < 2:
-        return {"error": "Select at least two models"}, 400
+    if not isinstance(models, list) or len(models) < 2:
+        return {"error": "Select at least two models."}, 400
 
-    if not benchmarks:
-        return {"error": "Select at least one benchmark"}, 400
+    if not isinstance(benchmarks, list) or not benchmarks:
+        return {"error": "Select at least one benchmark."}, 400
+
+    model_error = validate_models(models)
+
+    if model_error:
+        return model_error, 400
+
+    benchmark_error = validate_benchmarks(benchmarks)
+
+    if benchmark_error:
+        return benchmark_error, 400
 
     results = benchmark_service.run(
         text=text,

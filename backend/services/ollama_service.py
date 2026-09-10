@@ -15,7 +15,6 @@ class OllamaService(LLMService):
         start = time.perf_counter()
 
         try:
-
             response = requests.post(
                 self.url,
                 json={
@@ -30,16 +29,60 @@ class OllamaService(LLMService):
 
             data = response.json()
 
+            generated_text = data.get("response", "").strip()
+
+            if not generated_text:
+                raise ValueError("Ollama returned an empty response.")
+
             latency = time.perf_counter() - start
 
-            return data["response"], latency
+            return generated_text, latency
 
-        except Exception as e:
-
-            print(f"\nOllama Error: {e}\n")
+        except requests.exceptions.ConnectionError:
+            print("\nOllama Error: Server is not running.\n")
 
             return (
-                "Generation failed due to Ollama error.",
+                "Generation failed: Ollama server is unavailable.",
+                time.perf_counter() - start
+            )
+
+        except requests.exceptions.Timeout:
+            print("\nOllama Error: Request timed out.\n")
+
+            return (
+                "Generation failed: Ollama request timed out.",
+                time.perf_counter() - start
+            )
+
+        except requests.exceptions.HTTPError as e:
+            print(f"\nOllama HTTP Error: {e}\n")
+
+            return (
+                "Generation failed: Ollama returned an HTTP error.",
+                time.perf_counter() - start
+            )
+
+        except (ValueError, KeyError) as e:
+            print(f"\nOllama Response Error: {e}\n")
+
+            return (
+                "Generation failed: Invalid response from Ollama.",
+                time.perf_counter() - start
+            )
+
+        except requests.exceptions.RequestException as e:
+            print(f"\nOllama Request Error: {e}\n")
+
+            return (
+                "Generation failed: Ollama request error.",
+                time.perf_counter() - start
+            )
+
+        except Exception as e:
+            print(f"\nUnexpected Ollama Error: {e}\n")
+
+            return (
+                "Generation failed due to an unexpected Ollama error.",
                 time.perf_counter() - start
             )
 
