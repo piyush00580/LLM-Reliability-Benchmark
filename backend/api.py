@@ -14,6 +14,7 @@ history_service = BenchmarkHistoryService()
 VALID_MODELS = {
     "gemini",
     "ollama",
+    "groq",
     "mock_excellent",
     "mock_average",
     "mock_poor",
