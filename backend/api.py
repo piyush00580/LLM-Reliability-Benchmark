@@ -15,6 +15,7 @@ VALID_MODELS = {
     "gemini",
     "ollama",
     "groq",
+    "mistral",
     "mock_excellent",
     "mock_average",
     "mock_poor",

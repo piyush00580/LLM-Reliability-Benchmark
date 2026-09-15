@@ -1,6 +1,7 @@
 from services.gemini_service import GeminiService
 from services.ollama_service import OllamaService
 from services.groq_service import GroqService
+from services.mistral_service import MistralService
 from services.mock_service import MockService
 from services.mock_excellent_service import MockExcellentService
 from services.mock_average_service import MockAverageService
@@ -23,6 +24,9 @@ class LLMFactory:
         elif model_name == "groq":
             return GroqService()
 
+        elif model_name == "mistral":
+            return MistralService()
+
         elif model_name == "mock":
             return MockService()
 
@@ -44,6 +48,7 @@ class LLMFactory:
             "gemini",
             "ollama",
             "groq",
+            "mistral",
             "mock_excellent",
             "mock_average",
             "mock_poor"
