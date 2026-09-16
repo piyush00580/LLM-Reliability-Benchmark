@@ -30,7 +30,15 @@ class DashboardService:
 
         # Default values
         total_runs = 0
-        model_count = len(LLMFactory.available_models())
+        available_models = LLMFactory.available_models()
+
+        real_models = [
+            model
+            for model in available_models
+            if not model.startswith("mock_")
+        ]
+
+        model_count = len(real_models)
         reliability = 0.0
         recent_runs = []
         chart = []
