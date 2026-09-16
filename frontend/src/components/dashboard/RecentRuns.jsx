@@ -1,4 +1,22 @@
+import {
+    FaCircle,
+    FaBolt
+} from "react-icons/fa";
+
 import "./Dashboard.css";
+
+function formatModelName(model) {
+
+    const names = {
+        gemini: "Gemini 2.5 Flash-Lite",
+        ollama: "Llama 3.2 3B",
+        groq: "GPT-OSS 120B",
+        mistral: "Ministral 3B",
+    };
+
+    return names[model] || model;
+
+}
 
 function RecentRuns({ runs }) {
 
@@ -6,71 +24,137 @@ function RecentRuns({ runs }) {
 
         <div className="table-card">
 
-            <h3>Recent Benchmark Runs</h3>
+            {runs.length === 0 ? (
 
-            <table>
+                <div className="empty-runs">
 
-                <thead>
+                    <FaBolt />
 
-                    <tr>
-                        <th>Model</th>
-                        <th>Benchmark</th>
-                        <th>Score</th>
-                        <th>Latency</th>
-                        <th>Timestamp</th>
-                    </tr>
+                    <h3>
+                        No benchmark runs yet
+                    </h3>
 
-                </thead>
+                    <p>
+                        Run your first benchmark to start
+                        collecting reliability data.
+                    </p>
 
-                <tbody>
+                </div>
 
-                    {runs.length === 0 ? (
+            ) : (
 
-                        <tr>
-                            <td colSpan="5">
-                                No benchmark runs yet.
-                            </td>
-                        </tr>
+                <div className="table-container">
 
-                    ) : (
+                    <table>
 
-                        runs.map((run) => (
+                        <thead>
 
-                            <tr key={run.id}>
+                            <tr>
 
-                                <td>
-                                    {run.model}
-                                </td>
+                                <th>
+                                    Model
+                                </th>
 
-                                <td>
-                                    {run.benchmark}
-                                </td>
+                                <th>
+                                    Benchmark
+                                </th>
 
-                                <td>
-                                    {run.score}%
-                                </td>
+                                <th>
+                                    Score
+                                </th>
 
-                                <td>
-                                    {run.latency}s
-                                </td>
+                                <th>
+                                    Latency
+                                </th>
 
-                                <td>
-                                    {run.timestamp}
-                                </td>
+                                <th>
+                                    Timestamp
+                                </th>
 
                             </tr>
 
-                        ))
+                        </thead>
 
-                    )}
+                        <tbody>
 
-                </tbody>
+                            {runs.map((run) => (
 
-            </table>
+                                <tr key={run.id}>
+
+                                    <td>
+
+                                        <div className="model-cell">
+
+                                            <span className="model-status">
+                                                <FaCircle />
+                                            </span>
+
+                                            <span>
+                                                {formatModelName(
+                                                    run.model
+                                                )}
+                                            </span>
+
+                                        </div>
+
+                                    </td>
+
+                                    <td>
+
+                                        <span className="benchmark-badge">
+
+                                            {run.benchmark}
+
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+
+                                        <span className="score-value">
+
+                                            {run.score}%
+
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+
+                                        <span className="latency-value">
+
+                                            {run.latency}s
+
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+
+                                        <span className="timestamp">
+
+                                            {run.timestamp}
+
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                            ))}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            )}
 
         </div>
 
     );
+
 }
 
 export default RecentRuns;

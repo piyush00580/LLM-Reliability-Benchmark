@@ -1,18 +1,49 @@
 import "./Dashboard.css";
 
-function StatCard({ title, value, icon, color }) {
+function StatCard({
+    title,
+    value,
+    icon,
+    color,
+    description
+}) {
+
     return (
-        <div className="stat-card">
-            <div className="stat-icon" style={{ backgroundColor: color }}>
-                {icon}
+
+        <div className={`stat-card stat-${color}`}>
+
+            <div className="stat-card-top">
+
+                <div className="stat-icon">
+
+                    {icon}
+
+                </div>
+
+                <span className="stat-label">
+
+                    {title}
+
+                </span>
+
             </div>
 
-            <div className="stat-info">
-                <p>{title}</p>
-                <h2>{value}</h2>
+            <div className="stat-value">
+
+                {value}
+
             </div>
+
+            <div className="stat-description">
+
+                {description}
+
+            </div>
+
         </div>
+
     );
+
 }
 
 export default StatCard;

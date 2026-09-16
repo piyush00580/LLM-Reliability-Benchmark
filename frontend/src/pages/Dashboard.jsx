@@ -7,6 +7,8 @@ import {
     FaRobot,
     FaPlayCircle,
     FaChartLine,
+    FaArrowUp,
+    FaShieldAlt,
 } from "react-icons/fa";
 
 import StatCard from "../components/dashboard/StatCard";
@@ -22,69 +24,210 @@ function Dashboard() {
     const [dashboard, setDashboard] = useState(null);
 
     useEffect(() => {
+
         async function loadDashboard() {
+
             try {
+
                 const data = await getDashboard();
+
                 setDashboard(data);
+
             } catch (error) {
-                console.error("Failed to load dashboard:", error);
+
+                console.error(
+                    "Failed to load dashboard:",
+                    error
+                );
+
             }
+
         }
 
         loadDashboard();
+
     }, []);
 
     if (!dashboard) {
+
         return (
+
             <Layout>
-                <h2>Loading Dashboard...</h2>
+
+                <div className="dashboard-loading">
+
+                    <div className="loading-spinner"></div>
+
+                    <p>
+                        Loading reliability data...
+                    </p>
+
+                </div>
+
             </Layout>
+
         );
+
     }
 
     return (
+
         <Layout>
 
-            <div className="dashboard-page">
+            <div className="dashboard-container">
 
-                <h1>LLM Reliability Dashboard</h1>
+                {/* =========================
+                    Dashboard Header
+                ========================= */}
 
-                <StatCard
-                    title="Total Benchmarks"
-                    value={dashboard.total_runs}
-                    icon={<FaPlayCircle />}
-                    color="#2563eb"
-                />
+                <section className="dashboard-header">
 
-                <StatCard
-                    title="Models"
-                    value={dashboard.models}
-                    icon={<FaRobot />}
-                    color="#16a34a"
-                />
+                    <div>
 
-                <StatCard
-                    title="Datasets"
-                    value={dashboard.datasets}
-                    icon={<FaDatabase />}
-                    color="#ca8a04"
-                />
+                        <div className="dashboard-eyebrow">
 
-                <StatCard
-                    title="Reliability"
-                    value={`${dashboard.reliability}%`}
-                    icon={<FaChartLine />}
-                    color="#9333ea"
-                />
+                            <FaShieldAlt />
+
+                            MODEL EVALUATION PLATFORM
+
+                        </div>
+
+                        <h1>
+                            Reliability Overview
+                        </h1>
+
+                        <p>
+                            Monitor the reliability, consistency and
+                            performance of your language models.
+                        </p>
+
+                    </div>
+
+                    <div className="dashboard-status">
+
+                        <span className="status-dot"></span>
+
+                        System operational
+
+                    </div>
+
+                </section>
+
+
+                {/* =========================
+                    KPI Cards
+                ========================= */}
+
+                <section className="stats-grid">
+
+                    <StatCard
+                        title="Benchmark Runs"
+                        value={dashboard.total_runs}
+                        icon={<FaPlayCircle />}
+                        color="purple"
+                        description="Total evaluations"
+                    />
+
+                    <StatCard
+                        title="Models Evaluated"
+                        value={dashboard.models}
+                        icon={<FaRobot />}
+                        color="blue"
+                        description="Active model providers"
+                    />
+
+                    <StatCard
+                        title="Datasets"
+                        value={dashboard.datasets}
+                        icon={<FaDatabase />}
+                        color="orange"
+                        description="Available evaluation data"
+                    />
+
+                    <StatCard
+                        title="Overall Reliability"
+                        value={`${dashboard.reliability}%`}
+                        icon={<FaChartLine />}
+                        color="green"
+                        description="Weighted reliability score"
+                    />
+
+                </section>
+
+
+                {/* =========================
+                    Reliability Section
+                ========================= */}
+
+                <section className="dashboard-section">
+
+                    <div className="section-heading">
+
+                        <div>
+
+                            <h2>
+                                Model Reliability
+                            </h2>
+
+                            <p>
+                                Compare reliability scores across
+                                evaluated language models.
+                            </p>
+
+                        </div>
+
+                        <div className="section-badge">
+
+                            <FaArrowUp />
+
+                            Higher is better
+
+                        </div>
+
+                    </div>
+
+                    <ReliabilityChart
+                        data={dashboard.chart}
+                    />
+
+                </section>
+
+
+                {/* =========================
+                    Recent Activity
+                ========================= */}
+
+                <section className="dashboard-section">
+
+                    <div className="section-heading">
+
+                        <div>
+
+                            <h2>
+                                Recent Benchmark Activity
+                            </h2>
+
+                            <p>
+                                Latest model evaluation runs recorded
+                                by the platform.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <RecentRuns
+                        runs={dashboard.recent_runs}
+                    />
+
+                </section>
 
             </div>
 
-            <RecentRuns runs={dashboard.recent_runs} />
-
-            <ReliabilityChart data={dashboard.chart} />
-
         </Layout>
+
     );
+
 }
 
 export default Dashboard;

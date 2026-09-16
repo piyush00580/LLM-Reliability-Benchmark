@@ -1,15 +1,88 @@
 import { useState } from "react";
-import axios from "axios";
 import Layout from "../components/layout/Layout";
+import client from "../api/client";
+
+import {
+    FaBalanceScale,
+    FaBolt,
+    FaBrain,
+    FaCheckCircle,
+    FaExclamationTriangle,
+    FaShieldAlt,
+    FaSyncAlt,
+    FaTrophy,
+} from "react-icons/fa";
+
 import "./Compare.css";
 
-const benchmarkDisplayNames = {
-    consistency: "Consistency",
-    hallucination: "Hallucination",
-    information_decay: "Information Retention",
-    prompt_robustness: "Prompt Robustness",
-};
+const MODELS = [
+    {
+        id: "gemini",
+        name: "Gemini 2.5 Flash-Lite",
+        provider: "Google",
+        description: "Fast & capable",
+        icon: "✦",
+    },
+    {
+        id: "ollama",
+        name: "Llama 3.2 3B",
+        provider: "Ollama",
+        description: "Local & private",
+        icon: "⚡",
+    },
+    {
+        id: "groq",
+        name: "GPT-OSS 120B",
+        provider: "Groq",
+        description: "Open-weight beast",
+        icon: "◆",
+    },
+    {
+        id: "mistral",
+        name: "Ministral 3B",
+        provider: "Mistral",
+        description: "Small but mighty",
+        icon: "◈",
+    },
+];
 
+const BENCHMARKS = [
+    {
+        id: "consistency",
+        title: "Consistency",
+        description: "Does it stay consistent?",
+        icon: <FaSyncAlt />,
+    },
+    {
+        id: "hallucination",
+        title: "Hallucination Resistance",
+        description: "Can it avoid making things up?",
+        icon: <FaExclamationTriangle />,
+    },
+    {
+        id: "information_decay",
+        title: "Information Retention",
+        description: "What survives over time?",
+        icon: <FaBrain />,
+    },
+    {
+        id: "prompt_robustness",
+        title: "Prompt Robustness",
+        description: "Try to break the prompt.",
+        icon: <FaShieldAlt />,
+    },
+];
+
+const getBenchmarkName = (benchmark) => {
+    const names = {
+        consistency: "Consistency",
+        hallucination: "Hallucination Resistance",
+        information_decay: "Information Retention",
+        prompt_robustness: "Prompt Robustness",
+    };
+
+    return names[benchmark] || benchmark;
+};
 
 const normalizeBenchmark = (value) => {
     return String(value || "")
@@ -18,523 +91,619 @@ const normalizeBenchmark = (value) => {
         .trim();
 };
 
+const getModelName = (modelId) => {
+    return MODELS.find((model) => model.id === modelId)?.name || modelId;
+};
+
+const getModelProvider = (modelId) => {
+    return MODELS.find((model) => model.id === modelId)?.provider || "";
+};
+
+const getModelIcon = (modelId) => {
+    return MODELS.find((model) => model.id === modelId)?.icon || "◆";
+};
 
 function Compare() {
+    const [selectedModels, setSelectedModels] = useState([
+        "gemini",
+        "ollama",
+    ]);
 
-    const [models, setModels] = useState({
-        mock_poor: false,
-        mock_average: false,
-        mock_excellent: false,
-        gemini: false,
-        ollama: true,
-    });
-
-    const [benchmarks, setBenchmarks] = useState({
-        consistency: true,
-        hallucination: true,
-        information_decay: true,
-        prompt_robustness: true,
-    });
+    const [selectedBenchmarks, setSelectedBenchmarks] = useState(
+        BENCHMARKS.map((benchmark) => benchmark.id)
+    );
 
     const [text, setText] = useState("");
-
     const [results, setResults] = useState(null);
-
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-
-    const toggleModel = (name) => {
-
-        setModels((prev) => ({
-            ...prev,
-            [name]: !prev[name],
-        }));
-
+    const toggleModel = (modelId) => {
+        setSelectedModels((current) =>
+            current.includes(modelId)
+                ? current.filter((id) => id !== modelId)
+                : [...current, modelId]
+        );
     };
 
-
-    const toggleBenchmark = (name) => {
-
-        setBenchmarks((prev) => ({
-            ...prev,
-            [name]: !prev[name],
-        }));
-
+    const toggleBenchmark = (benchmarkId) => {
+        setSelectedBenchmarks((current) =>
+            current.includes(benchmarkId)
+                ? current.filter((id) => id !== benchmarkId)
+                : [...current, benchmarkId]
+        );
     };
-
 
     const compareModels = async () => {
+        setError("");
 
         if (!text.trim()) {
-
-            alert("Please enter some text.");
-
+            setError("Drop some text first — the models need something to fight over.");
             return;
         }
-
-
-        const selectedModels = Object.keys(models).filter(
-            (model) => models[model]
-        );
-
-
-        const selectedBenchmarks = Object.keys(benchmarks).filter(
-            (benchmark) => benchmarks[benchmark]
-        );
-
 
         if (selectedModels.length < 2) {
-
-            alert("Please select at least two models.");
-
+            setError("Pick at least two models to start a comparison.");
             return;
         }
-
 
         if (selectedBenchmarks.length === 0) {
-
-            alert("Please select at least one benchmark.");
-
+            setError("Choose at least one pressure test.");
             return;
         }
 
-
         try {
-
             setLoading(true);
-
             setResults(null);
 
-
-            const response = await axios.post(
-                "http://127.0.0.1:5000/api/compare",
-                {
-                    text,
-                    models: selectedModels,
-                    benchmarks: selectedBenchmarks,
-                }
-            );
-
+            const response = await client.post("/compare", {
+                text: text.trim(),
+                models: selectedModels,
+                benchmarks: selectedBenchmarks,
+            });
 
             console.log(
-                            "COMPARE RESPONSE JSON:",
-                            JSON.stringify(response.data, null, 2)
+                "COMPARE RESPONSE:",
+                JSON.stringify(response.data, null, 2)
             );
 
-
             setResults(response.data);
+        } catch (err) {
+            console.error("Comparison failed:", err);
 
+            const message =
+                err.response?.data?.detail ||
+                err.response?.data?.message ||
+                err.message ||
+                "Something went wrong while comparing the models.";
 
-        } catch (error) {
-
-            console.error("Comparison error:", error);
-
-            alert("Comparison failed.");
-
+            setError(message);
         } finally {
-
             setLoading(false);
-
         }
-
     };
 
+    const getReportForBenchmark = (modelResult, benchmarkId) => {
+        const reports = modelResult?.benchmark_reports || [];
+
+        return reports.find((report) => {
+            const reportName = normalizeBenchmark(report?.benchmark);
+
+            const aliases = {
+                consistency: ["consistency"],
+                hallucination: ["hallucination"],
+                information_decay: [
+                    "informationdecay",
+                    "informationretention",
+                ],
+                prompt_robustness: ["promptrobustness"],
+            };
+
+            return aliases[benchmarkId]?.includes(reportName);
+        });
+    };
+
+    const getOverallScore = (modelResult) => {
+        return modelResult?.overall_reliability?.overall_score;
+    };
+
+    const getWinner = () => {
+        if (!results) return null;
+
+        const entries = Object.entries(results);
+
+        if (!entries.length) return null;
+
+        return entries.reduce((best, current) => {
+            const currentScore =
+                current[1]?.overall_reliability?.overall_score ?? -1;
+
+            const bestScore =
+                best[1]?.overall_reliability?.overall_score ?? -1;
+
+            return currentScore > bestScore ? current : best;
+        });
+    };
+
+    const winner = getWinner();
 
     return (
-
         <Layout>
+            <div className="compare-page">
 
-            <div className="compare-container">
+                {/* HEADER */}
+                <section className="compare-header">
+                    <div className="compare-eyebrow">
+                        <FaBalanceScale />
+                        MODEL SHOWDOWN
+                    </div>
 
-                <h1>Compare Models</h1>
+                    <div className="compare-header-row">
+                        <div>
+                            <h1>
+                                Put models
+                                <span> head-to-head.</span>
+                            </h1>
 
+                            <p>
+                                Same challenge. Same pressure tests. Let the
+                                reliability scores decide.
+                            </p>
+                        </div>
+
+                        <div className="comparison-count">
+                            <strong>{selectedModels.length}</strong>
+                            <span>models selected</span>
+                        </div>
+                    </div>
+                </section>
 
                 {/* MODELS */}
+                <section className="compare-section">
+                    <div className="section-heading">
+                        <div className="section-number">01</div>
 
-                <div className="compare-card">
-
-                    <h2>Models</h2>
-
-                    <div className="compare-grid">
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={models.mock_poor}
-                                onChange={() =>
-                                    toggleModel("mock_poor")
-                                }
-                            />
-
-                            Mock Poor
-
-                        </label>
-
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={models.mock_average}
-                                onChange={() =>
-                                    toggleModel("mock_average")
-                                }
-                            />
-
-                            Mock Average
-
-                        </label>
-
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={models.mock_excellent}
-                                onChange={() =>
-                                    toggleModel("mock_excellent")
-                                }
-                            />
-
-                            Mock Excellent
-
-                        </label>
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={models.gemini}
-                                onChange={() =>
-                                    toggleModel("gemini")
-                                }
-                            />
-
-                            Gemini
-
-                        </label>
-
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={models.ollama}
-                                onChange={() =>
-                                    toggleModel("ollama")
-                                }
-                            />
-
-                            Llama 3.2 3B (Ollama)
-
-                        </label>
-
+                        <div>
+                            <h2>Choose your contenders</h2>
+                            <p>Who gets put under the microscope?</p>
+                        </div>
                     </div>
 
-                </div>
+                    <div className="model-selection-grid">
+                        {MODELS.map((model) => {
+                            const selected = selectedModels.includes(model.id);
 
+                            return (
+                                <button
+                                    key={model.id}
+                                    type="button"
+                                    className={`compare-model-card ${
+                                        selected ? "selected" : ""
+                                    }`}
+                                    onClick={() => toggleModel(model.id)}
+                                >
+                                    <div className="model-card-top">
+                                        <div className="model-icon">
+                                            {model.icon}
+                                        </div>
+
+                                        <div
+                                            className={`selection-indicator ${
+                                                selected ? "active" : ""
+                                            }`}
+                                        >
+                                            {selected && <FaCheckCircle />}
+                                        </div>
+                                    </div>
+
+                                    <div className="model-card-info">
+                                        <span className="provider">
+                                            {model.provider}
+                                        </span>
+
+                                        <h3>{model.name}</h3>
+
+                                        <p>{model.description}</p>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </section>
 
                 {/* BENCHMARKS */}
+                <section className="compare-section">
+                    <div className="section-heading">
+                        <div className="section-number">02</div>
 
-                <div className="compare-card">
-
-                    <h2>Benchmarks</h2>
-
-                    <div className="compare-grid">
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={benchmarks.consistency}
-                                onChange={() =>
-                                    toggleBenchmark("consistency")
-                                }
-                            />
-
-                            Consistency
-
-                        </label>
-
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={benchmarks.hallucination}
-                                onChange={() =>
-                                    toggleBenchmark("hallucination")
-                                }
-                            />
-
-                            Hallucination
-
-                        </label>
-
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={benchmarks.information_decay}
-                                onChange={() =>
-                                    toggleBenchmark("information_decay")
-                                }
-                            />
-
-                            Information Retention
-
-                        </label>
-
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                checked={benchmarks.prompt_robustness}
-                                onChange={() =>
-                                    toggleBenchmark("prompt_robustness")
-                                }
-                            />
-
-                            Prompt Robustness
-
-                        </label>
-
+                        <div>
+                            <h2>Pressure tests</h2>
+                            <p>Pick the ways you want to stress them.</p>
+                        </div>
                     </div>
 
-                </div>
+                    <div className="benchmark-selection-grid">
+                        {BENCHMARKS.map((benchmark) => {
+                            const selected = selectedBenchmarks.includes(
+                                benchmark.id
+                            );
 
+                            return (
+                                <button
+                                    key={benchmark.id}
+                                    type="button"
+                                    className={`benchmark-choice ${
+                                        selected ? "selected" : ""
+                                    }`}
+                                    onClick={() =>
+                                        toggleBenchmark(benchmark.id)
+                                    }
+                                >
+                                    <div className="benchmark-choice-icon">
+                                        {benchmark.icon}
+                                    </div>
 
-                {/* INPUT TEXT */}
+                                    <div>
+                                        <strong>{benchmark.title}</strong>
+                                        <span>{benchmark.description}</span>
+                                    </div>
 
-                <div className="compare-card">
+                                    <div className="benchmark-check">
+                                        {selected && <FaCheckCircle />}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </section>
 
-                    <h2>Input Text</h2>
+                {/* INPUT */}
+                <section className="compare-section">
+                    <div className="section-heading">
+                        <div className="section-number">03</div>
 
-                    <textarea
-                        value={text}
-                        onChange={(e) =>
-                            setText(e.target.value)
+                        <div>
+                            <h2>Give them the same challenge</h2>
+                            <p>
+                                Fair fight. Identical input for every model.
+                            </p>
+                        </div>
+
+                        <div className="character-count">
+                            {text.length} / 5000
+                        </div>
+                    </div>
+
+                    <div className="compare-input-card">
+                        <div className="input-status">
+                            <span />
+                            INPUT READY
+                        </div>
+
+                        <textarea
+                            value={text}
+                            onChange={(e) => {
+                                if (e.target.value.length <= 5000) {
+                                    setText(e.target.value);
+                                }
+                            }}
+                            placeholder="Enter a question, claim, scenario, or piece of information worth testing..."
+                        />
+
+                        <div className="input-footer">
+                            <span>
+                                Tip: interesting inputs make better experiments.
+                            </span>
+
+                            <span>
+                                {selectedModels.length} models ·{" "}
+                                {selectedBenchmarks.length} tests
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ERROR */}
+                {error && (
+                    <div className="compare-error">
+                        <FaExclamationTriangle />
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                {/* ACTION */}
+                <section className="compare-launch">
+                    <div>
+                        <span className="launch-label">
+                            READY TO COMPARE?
+                        </span>
+
+                        <strong>
+                            {selectedModels.length >= 2
+                                ? `${selectedModels.length} models enter. One comes out on top.`
+                                : "Select at least two models to begin."}
+                        </strong>
+                    </div>
+
+                    <button
+                        type="button"
+                        className="compare-launch-button"
+                        onClick={compareModels}
+                        disabled={
+                            loading ||
+                            selectedModels.length < 2 ||
+                            selectedBenchmarks.length === 0 ||
+                            !text.trim()
                         }
-                        placeholder="Enter text to compare model reliability..."
-                    />
+                    >
+                        <FaBolt />
 
-                </div>
+                        {loading
+                            ? "Running comparison..."
+                            : "Start the showdown"}
+                    </button>
+                </section>
 
+                {/* LOADING */}
+                {loading && (
+                    <section className="comparison-running">
+                        <div className="running-spinner">
+                            <FaBalanceScale />
+                        </div>
 
-                {/* COMPARE BUTTON */}
-
-                <button
-                    className="compare-button"
-                    onClick={compareModels}
-                    disabled={loading}
-                >
-
-                    {loading
-                        ? "Comparing..."
-                        : "⚖️ Compare Models"}
-
-                </button>
-
+                        <div>
+                            <span>EXPERIMENT RUNNING</span>
+                            <h2>Let’s see what breaks first.</h2>
+                            <p>
+                                Running identical pressure tests across{" "}
+                                {selectedModels.length} models.
+                            </p>
+                        </div>
+                    </section>
+                )}
 
                 {/* RESULTS */}
+                {results && !loading && (
+                    <section className="comparison-results">
 
-                {results && (
+                        <div className="results-header">
+                            <div>
+                                <div className="compare-eyebrow">
+                                    <FaTrophy />
+                                    COMPARISON COMPLETE
+                                </div>
 
-                    <div className="compare-card">
+                                <h2>
+                                    And the winner is{" "}
+                                    <span>
+                                        {winner
+                                            ? getModelName(
+                                                  selectedModels.find(
+                                                      (id) =>
+                                                          getModelName(id) ===
+                                                          winner[0]
+                                                  ) || winner[0]
+                                              )
+                                            : "—"}
+                                        .
+                                    </span>
+                                </h2>
 
-                        <h2>Comparison Results</h2>
+                                <p>
+                                    Every model faced the same challenge and
+                                    the same pressure tests.
+                                </p>
+                            </div>
+                        </div>
 
+                        {winner && (
+                            <div className="winner-card">
+                                <div className="winner-icon">
+                                    <FaTrophy />
+                                </div>
 
-                        <div className="comparison-table-wrapper">
+                                <div className="winner-info">
+                                    <span>TOP RELIABILITY SCORE</span>
 
-                            <table className="comparison-table">
+                                    <h3>{winner[0]}</h3>
 
-                                <thead>
+                                    <p>
+                                        {getOverallScore(winner[1])?.toFixed(
+                                            1
+                                        ) || "—"}
+                                        /100 overall reliability
+                                    </p>
+                                </div>
 
-                                    <tr>
+                                <div className="winner-score">
+                                    {Math.round(
+                                        getOverallScore(winner[1]) || 0
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
-                                        <th>
-                                            Benchmark
-                                        </th>
+                        {/* SCORE CARDS */}
+                        <div className="model-results-grid">
+                            {Object.entries(results).map(
+                                ([modelName, modelResult]) => {
+                                    const score =
+                                        getOverallScore(modelResult) || 0;
 
+                                    return (
+                                        <div
+                                            className="model-result-card"
+                                            key={modelName}
+                                        >
+                                            <div className="result-model-top">
+                                                <div className="result-model-icon">
+                                                    {getModelIcon(
+                                                        selectedModels.find(
+                                                            (id) =>
+                                                                getModelName(
+                                                                    id
+                                                                ) === modelName
+                                                        )
+                                                    )}
+                                                </div>
 
-                                        {Object.keys(results).map(
-                                            (model) => (
+                                                <span>
+                                                    {modelName}
+                                                </span>
+                                            </div>
 
-                                                <th key={model}>
-                                                    {model}
-                                                </th>
+                                            <div className="result-score">
+                                                {Math.round(score)}
+                                                <small>/100</small>
+                                            </div>
 
-                                            )
-                                        )}
+                                            <div className="result-score-bar">
+                                                <span
+                                                    style={{
+                                                        width: `${Math.min(
+                                                            Math.max(score, 0),
+                                                            100
+                                                        )}%`,
+                                                    }}
+                                                />
+                                            </div>
 
-                                    </tr>
+                                            <div className="result-verdict">
+                                                {score >= 90
+                                                    ? "Highly reliable"
+                                                    : score >= 75
+                                                    ? "Reliable"
+                                                    : score >= 60
+                                                    ? "Needs attention"
+                                                    : "Unreliable"}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                            )}
+                        </div>
 
-                                </thead>
+                        {/* TABLE */}
+                        <div className="results-table-card">
+                            <div className="results-table-heading">
+                                <div>
+                                    <span>DETAILED BREAKDOWN</span>
+                                    <h3>Where each model held up</h3>
+                                </div>
+                            </div>
 
+                            <div className="comparison-table-wrapper">
+                                <table className="comparison-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Pressure Test</th>
 
-                                <tbody>
+                                            {Object.keys(results).map(
+                                                (modelName) => (
+                                                    <th key={modelName}>
+                                                        {modelName}
+                                                    </th>
+                                                )
+                                            )}
+                                        </tr>
+                                    </thead>
 
-
-                                    {/* BENCHMARK ROWS */}
-
-                                    {Object.keys(benchmarks)
-                                        .filter(
-                                            (benchmark) =>
-                                                benchmarks[benchmark]
-                                        )
-                                        .map((benchmark) => {
-
-                                            const displayName =
-                                                benchmarkDisplayNames[benchmark] || benchmark;
-
-
-                                            return (
-
-                                                <tr
-                                                    key={benchmark}
-                                                >
-
+                                    <tbody>
+                                        {selectedBenchmarks.map(
+                                            (benchmark) => (
+                                                <tr key={benchmark}>
                                                     <td>
-                                                        {displayName}
+                                                        {getBenchmarkName(
+                                                            benchmark
+                                                        )}
                                                     </td>
 
-
-                                                    {Object.keys(
+                                                    {Object.entries(
                                                         results
                                                     ).map(
-                                                        (model) => {
-
-                                                            const modelResult =
-                                                                results[
-                                                                    model
-                                                                ];
-
-
-                                                            const reports =
-                                                                modelResult?.benchmark_reports ||
-                                                                [];
-
-
-                                                            const report = reports.find((item) => {
-                                                                const reportName = normalizeBenchmark(item?.benchmark);
-
-                                                                const benchmarkAliases = {
-                                                                    consistency: ["consistency"],
-                                                                    hallucination: ["hallucination"],
-                                                                    information_decay: [
-                                                                        "informationdecay",
-                                                                        "informationretention"
-                                                                    ],
-                                                                    prompt_robustness: ["promptrobustness"]
-                                                                };
-
-                                                                return benchmarkAliases[benchmark]?.includes(reportName);
-                                                            });
-
+                                                        ([
+                                                            modelName,
+                                                            modelResult,
+                                                        ]) => {
+                                                            const report =
+                                                                getReportForBenchmark(
+                                                                    modelResult,
+                                                                    benchmark
+                                                                );
 
                                                             const score =
                                                                 report?.score;
 
-
                                                             return (
-
                                                                 <td
                                                                     key={
-                                                                        model
+                                                                        modelName
                                                                     }
                                                                 >
-
-                                                                    {score !== undefined
-                                                                        && score !== null
-                                                                        ? `${Math.round(score)}%`
+                                                                    {score !==
+                                                                    undefined
+                                                                        ? `${Math.round(
+                                                                              score
+                                                                          )}%`
                                                                         : "N/A"}
-
                                                                 </td>
-
                                                             );
-
                                                         }
                                                     )}
-
                                                 </tr>
-
-                                            );
-
-                                        })}
-
-
-                                    {/* OVERALL ROW */}
-
-                                    <tr className="overall-row">
-
-                                        <td>
-
-                                            <strong>
-                                                Overall
-                                            </strong>
-
-                                        </td>
-
-
-                                        {Object.keys(results).map(
-                                            (model) => {
-
-                                                const score =
-                                                    results[
-                                                        model
-                                                    ]
-                                                        ?.overall_reliability
-                                                        ?.overall_score;
-
-
-                                                return (
-
-                                                    <td
-                                                        key={model}
-                                                    >
-
-                                                        <strong>
-
-                                                            {score !==
-                                                            undefined
-                                                                ? `${Math.round(
-                                                                      score
-                                                                  )}%`
-                                                                : "N/A"}
-
-                                                        </strong>
-
-                                                    </td>
-
-                                                );
-
-                                            }
+                                            )
                                         )}
 
-                                    </tr>
+                                        <tr className="overall-row">
+                                            <td>
+                                                <strong>
+                                                    Overall Reliability
+                                                </strong>
+                                            </td>
 
+                                            {Object.entries(results).map(
+                                                ([modelName, modelResult]) => {
+                                                    const score =
+                                                        getOverallScore(
+                                                            modelResult
+                                                        );
 
-                                </tbody>
-
-                            </table>
-
+                                                    return (
+                                                        <td key={modelName}>
+                                                            <strong>
+                                                                {score !==
+                                                                undefined
+                                                                    ? `${Math.round(
+                                                                          score
+                                                                      )}%`
+                                                                    : "N/A"}
+                                                            </strong>
+                                                        </td>
+                                                    );
+                                                }
+                                            )}
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
-                    </div>
-
+                        <button
+                            type="button"
+                            className="new-comparison-button"
+                            onClick={() => {
+                                setResults(null);
+                                setError("");
+                            }}
+                        >
+                            <FaBalanceScale />
+                            Run another comparison
+                        </button>
+                    </section>
                 )}
-
             </div>
-
         </Layout>
-
     );
-
 }
-
 
 export default Compare;

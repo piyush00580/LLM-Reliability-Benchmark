@@ -1,27 +1,105 @@
 @import "./variables.css";
 
+/* =========================
+   Reset
+========================= */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    margin: 0;
-    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+html {
+    min-height: 100%;
     background: var(--background);
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+
+    font-family:
+        Inter,
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+
+    background:
+        radial-gradient(
+            circle at 85% -10%,
+            rgba(124, 92, 255, 0.08),
+            transparent 32%
+        ),
+        var(--background);
+
     color: var(--text-primary);
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
 }
 
 h1,
 h2,
-h3 {
+h3,
+h4,
+h5,
+h6 {
     margin: 0;
 }
+
+::selection {
+    background: rgba(124, 92, 255, 0.35);
+    color: #ffffff;
+}
+
+/* =========================
+   Scrollbar
+========================= */
+
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2a3140;
+    border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #3b4355;
+}
+
+/* =========================
+   Main Layout
+========================= */
 
 .layout {
     display: flex;
     min-height: 100vh;
+    width: 100%;
 }
 
 /* =========================
@@ -29,63 +107,146 @@ h3 {
 ========================= */
 
 .sidebar {
-    width: 265px;
-    min-height: 100vh;
-
-    background: var(--sidebar);
-    color: white;
-
-    padding: 24px 16px;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    height: 100vh;
 
     position: sticky;
     top: 0;
-    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 22px 14px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0b0e16 0%,
+            #090c13 100%
+        );
+
+    border-right: 1px solid var(--border);
+
+    color: var(--text-primary);
+
+    z-index: 20;
+}
+
+/* Brand */
+
+.sidebar::before {
+    content: "RELIABILITY LAB";
+
+    display: block;
+
+    padding: 8px 12px 24px;
+
+    color: #ffffff;
+
+    font-size: 16px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+
+    border-bottom: 1px solid var(--border);
+
+    margin-bottom: 22px;
 }
 
 .sidebar nav {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
 }
 
+/* Navigation links */
+
 .sidebar a {
-    color: #cbd5e1;
-
-    padding: 12px 14px;
-
-    border-radius: 9px;
+    position: relative;
 
     display: flex;
     align-items: center;
     gap: 12px;
 
+    padding: 11px 13px;
+
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+
+    color: var(--text-secondary);
+
     text-decoration: none;
 
-    font-size: 15px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 550;
 
     transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease;
+        background var(--transition),
+        color var(--transition),
+        border-color var(--transition),
+        transform var(--transition);
+}
+
+.sidebar a svg {
+    width: 17px;
+    height: 17px;
+
+    color: var(--text-muted);
+
+    transition: color var(--transition);
 }
 
 .sidebar a:hover {
     background: var(--sidebar-hover);
-    color: white;
+    color: var(--text-primary);
+
+    border-color: var(--border-light);
+
+    transform: translateX(2px);
+}
+
+.sidebar a:hover svg {
+    color: var(--text-primary);
 }
 
 .sidebar a.active {
-    background: var(--primary);
-    color: white;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(124, 92, 255, 0.16),
+            rgba(124, 92, 255, 0.06)
+        );
+
+    border-color: rgba(124, 92, 255, 0.18);
+
+    color: #ffffff;
 }
 
-.sidebar a svg {
-    font-size: 17px;
+.sidebar a.active::before {
+    content: "";
+
+    position: absolute;
+
+    left: -14px;
+
+    top: 9px;
+    bottom: 9px;
+
+    width: 3px;
+
+    border-radius: 0 4px 4px 0;
+
+    background: var(--primary);
+
+    box-shadow: 0 0 14px rgba(124, 92, 255, 0.65);
+}
+
+.sidebar a.active svg {
+    color: var(--primary);
 }
 
 /* =========================
-   Main Content
+   Main Content Area
 ========================= */
 
 .content {
@@ -94,6 +255,13 @@ h3 {
 
     display: flex;
     flex-direction: column;
+
+    background:
+        radial-gradient(
+            circle at 90% 0%,
+            rgba(124, 92, 255, 0.045),
+            transparent 30%
+        );
 }
 
 /* =========================
@@ -101,13 +269,33 @@ h3 {
 ========================= */
 
 .navbar {
-    background: white;
+    min-height: 76px;
 
-    padding: 20px 36px;
+    display: flex;
+    align-items: center;
+
+    padding: 0 36px;
+
+    background: rgba(10, 13, 20, 0.78);
 
     border-bottom: 1px solid var(--border);
 
-    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    position: sticky;
+    top: 0;
+
+    z-index: 10;
+}
+
+.navbar h2 {
+    color: var(--text-primary);
+
+    font-size: 17px;
+    font-weight: 650;
+
+    letter-spacing: -0.01em;
 }
 
 /* =========================
@@ -117,5 +305,204 @@ h3 {
 .main-content {
     flex: 1;
 
-    padding: 32px 38px;
+    width: 100%;
+    max-width: var(--content-max-width);
+
+    padding: 34px 38px 50px;
+
+    margin: 0 auto;
+}
+
+/* =========================
+   Generic Card System
+========================= */
+
+.card {
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-lg);
+
+    box-shadow: var(--shadow);
+
+    transition:
+        border-color var(--transition),
+        background var(--transition),
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+.card:hover {
+    border-color: var(--border-light);
+}
+
+/* =========================
+   Buttons
+========================= */
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 10px 16px;
+
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+
+    background: var(--primary);
+
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    box-shadow: var(--shadow-primary);
+
+    transition:
+        background var(--transition),
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 10px 16px;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+
+    background: var(--surface);
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition:
+        background var(--transition),
+        border-color var(--transition),
+        color var(--transition);
+}
+
+.btn-secondary:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+/* =========================
+   Form Elements
+========================= */
+
+input,
+textarea,
+select {
+    width: 100%;
+
+    padding: 11px 13px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-sm);
+
+    color: var(--text-primary);
+
+    outline: none;
+
+    transition:
+        border-color var(--transition),
+        box-shadow var(--transition),
+        background var(--transition);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-muted);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: rgba(124, 92, 255, 0.6);
+
+    box-shadow:
+        0 0 0 3px rgba(124, 92, 255, 0.1);
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 900px) {
+    .sidebar {
+        width: 76px;
+        min-width: 76px;
+
+        padding: 18px 10px;
+    }
+
+    .sidebar::before {
+        content: "RL";
+
+        text-align: center;
+
+        padding: 8px 0 22px;
+
+        font-size: 14px;
+    }
+
+    .sidebar a {
+        justify-content: center;
+
+        padding: 12px;
+    }
+
+    .sidebar a span {
+        display: none;
+    }
+
+    .sidebar a.active::before {
+        left: -10px;
+    }
+
+    .navbar {
+        padding: 0 24px;
+    }
+
+    .main-content {
+        padding: 28px 24px 40px;
+    }
+}
+
+@media (max-width: 600px) {
+    .sidebar {
+        display: none;
+    }
+
+    .navbar {
+        min-height: 68px;
+        padding: 0 18px;
+    }
+
+    .navbar h2 {
+        font-size: 15px;
+    }
+
+    .main-content {
+        padding: 22px 16px 32px;
+    }
 }

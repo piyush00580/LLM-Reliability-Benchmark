@@ -10,44 +10,61 @@ import {
 
 function Sidebar() {
 
+    const navigation = [
+        {
+            path: "/",
+            label: "Dashboard",
+            icon: <FaChartBar />
+        },
+        {
+            path: "/benchmark",
+            label: "Benchmark",
+            icon: <FaPlay />
+        },
+        {
+            path: "/compare",
+            label: "Compare",
+            icon: <FaBalanceScale />
+        },
+        {
+            path: "/reports",
+            label: "Reports",
+            icon: <FaFolderOpen />
+        },
+        {
+            path: "/settings",
+            label: "Settings",
+            icon: <FaCog />
+        }
+    ];
+
     return (
-
         <aside className="sidebar">
-
 
             <nav>
 
-                <NavLink to="/">
-                    <FaChartBar />
-                    <span>Dashboard</span>
-                </NavLink>
+                {navigation.map((item) => (
 
-                <NavLink to="/benchmark">
-                    <FaPlay />
-                    <span>Benchmark</span>
-                </NavLink>
+                    <NavLink
+                        key={item.path}
+                        to={item.path}
+                        end={item.path === "/"}
+                    >
 
-                <NavLink to="/reports">
-                    <FaFolderOpen />
-                    <span>Reports</span>
-                </NavLink>
+                        {item.icon}
 
-                <NavLink to="/compare">
-                    <FaBalanceScale />
-                    <span>Compare</span>
-                </NavLink>
+                        <span>
+                            {item.label}
+                        </span>
 
-                <NavLink to="/settings">
-                    <FaCog />
-                    <span>Settings</span>
-                </NavLink>
+                    </NavLink>
+
+                ))}
 
             </nav>
 
         </aside>
-
     );
-
 }
 
 export default Sidebar;
