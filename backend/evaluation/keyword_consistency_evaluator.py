@@ -1,13 +1,12 @@
-import spacy
-
 from evaluation.evaluation_metric import EvaluationMetric
+from evaluation.spacy_model import get_spacy_model
 
 
 class KeywordConsistencyEvaluator(EvaluationMetric):
 
     def __init__(self):
 
-        self.nlp = spacy.load("en_core_web_sm")
+        self.nlp = get_spacy_model()
 
     def extract_keywords(self, text):
 
