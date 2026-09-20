@@ -162,12 +162,7 @@ function Compare() {
                 benchmarks: selectedBenchmarks,
             });
 
-            console.log(
-                "COMPARE RESPONSE:",
-                JSON.stringify(response.data, null, 2)
-            );
-
-            setResults(response.data);
+            setResults(response.data.results);
         } catch (err) {
             console.error("Comparison failed:", err);
 
@@ -277,6 +272,7 @@ function Compare() {
                                 <button
                                     key={model.id}
                                     type="button"
+                                    disabled={loading}
                                     className={`compare-model-card ${
                                         selected ? "selected" : ""
                                     }`}
@@ -332,6 +328,7 @@ function Compare() {
                                 <button
                                     key={benchmark.id}
                                     type="button"
+                                    disabled={loading}
                                     className={`benchmark-choice ${
                                         selected ? "selected" : ""
                                     }`}

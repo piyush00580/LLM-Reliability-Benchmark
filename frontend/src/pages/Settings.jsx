@@ -1,3 +1,6 @@
+
+import { useEffect, useState } from "react";
+
 import Layout from "../components/layout/Layout";
 
 import {
@@ -13,38 +16,61 @@ import {
 
 import "./Settings.css";
 
+
+/* =========================================
+   Settings Page
+========================================= */
+
 function Settings() {
 
-    const models = [
+    /* =========================================
+       Provider State
+    ========================================= */
+
+    const [providerStatuses, setProviderStatuses] = useState({});
+    const [providersLoading, setProvidersLoading] = useState(true);
+    const [providersError, setProvidersError] = useState(false);
+
+
+    /* =========================================
+       Model Definitions
+    ========================================= */
+
+    const modelDefinitions = [
         {
+            id: "gemini",
             name: "Gemini 2.5 Flash-Lite",
             provider: "Google Gemini",
             type: "Cloud API",
             icon: <FaCloud />,
-            status: "Connected",
         },
         {
+            id: "ollama",
             name: "Llama 3.2 3B",
             provider: "Ollama",
             type: "Local",
             icon: <FaLaptopCode />,
-            status: "Local",
         },
         {
+            id: "groq",
             name: "GPT-OSS 120B",
             provider: "Groq",
             type: "Cloud API",
             icon: <FaCloud />,
-            status: "Connected",
         },
         {
+            id: "mistral",
             name: "Ministral 3B",
             provider: "Mistral",
             type: "Cloud API",
             icon: <FaCloud />,
-            status: "Connected",
         },
     ];
+
+
+    /* =========================================
+       Benchmark Definitions
+    ========================================= */
 
     const benchmarks = [
         {
@@ -54,20 +80,128 @@ function Settings() {
         },
         {
             name: "Hallucination Resistance",
-            description: "Measures whether important information is preserved without fabrication.",
+            description:
+                "Measures whether important information is preserved without fabrication.",
             weight: "25%",
         },
         {
             name: "Information Retention",
-            description: "Measures how much information survives repeated summarization.",
+            description:
+                "Measures how much information survives repeated summarization.",
             weight: "25%",
         },
         {
             name: "Prompt Robustness",
-            description: "Measures how reliably the model handles prompt variations.",
+            description:
+                "Measures how reliably the model handles prompt variations.",
             weight: "25%",
         },
     ];
+
+
+    /* =========================================
+       Fetch Provider Status
+    ========================================= */
+
+    useEffect(() => {
+
+        const fetchProviderStatuses = async () => {
+
+            try {
+
+                setProvidersLoading(true);
+                setProvidersError(false);
+
+                const response = await fetch(
+                    "http://localhost:5000/api/providers"
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Failed to fetch provider statuses."
+                    );
+                }
+
+                const data = await response.json();
+
+                setProviderStatuses(data.providers || {});
+
+            } catch (error) {
+
+                console.error(
+                    "Provider status error:",
+                    error
+                );
+
+                setProvidersError(true);
+
+            } finally {
+
+                setProvidersLoading(false);
+
+            }
+
+        };
+
+        fetchProviderStatuses();
+
+    }, []);
+
+
+    /* =========================================
+       Provider Status Helpers
+    ========================================= */
+
+    const getProviderStatus = (modelId) => {
+
+        const provider = providerStatuses[modelId];
+
+        if (providersLoading) {
+            return "Checking...";
+        }
+
+        if (providersError || !provider) {
+            return "Unavailable";
+        }
+
+        if (modelId === "ollama") {
+
+            return provider.reachable
+                ? "Online"
+                : "Unavailable";
+
+        }
+
+        return provider.configured
+            ? "Configured"
+            : "Not configured";
+
+    };
+
+
+    const getProviderStatusClass = (modelId) => {
+
+        const status = getProviderStatus(modelId);
+
+        if (
+            status === "Online" ||
+            status === "Configured"
+        ) {
+            return "available";
+        }
+
+        if (status === "Checking...") {
+            return "checking";
+        }
+
+        return "unavailable";
+
+    };
+
+
+    /* =========================================
+       Render
+    ========================================= */
 
     return (
 
@@ -96,8 +230,8 @@ function Settings() {
                         </h1>
 
                         <p>
-                            Inspect the configuration behind your reliability
-                            experiments.
+                            Inspect the configuration behind your
+                            reliability experiments.
                         </p>
 
                     </div>
@@ -145,7 +279,9 @@ function Settings() {
                         <div className="settings-card">
 
                             <div className="settings-card-icon purple">
+
                                 <FaServer />
+
                             </div>
 
                             <div>
@@ -170,7 +306,9 @@ function Settings() {
                         <div className="settings-card">
 
                             <div className="settings-card-icon blue">
+
                                 <FaServer />
+
                             </div>
 
                             <div>
@@ -195,7 +333,9 @@ function Settings() {
                         <div className="settings-card">
 
                             <div className="settings-card-icon green">
+
                                 <FaChartPie />
+
                             </div>
 
                             <div>
@@ -220,7 +360,9 @@ function Settings() {
                         <div className="settings-card">
 
                             <div className="settings-card-icon orange">
+
                                 <FaRobot />
+
                             </div>
 
                             <div>
@@ -265,7 +407,8 @@ function Settings() {
                             </h2>
 
                             <p>
-                                Models currently available to the platform.
+                                Live configuration and availability
+                                of supported model providers.
                             </p>
 
                         </div>
@@ -275,17 +418,19 @@ function Settings() {
 
                     <div className="provider-list">
 
-                        {models.map((model) => (
+                        {modelDefinitions.map((model) => (
 
                             <div
                                 className="provider-row"
-                                key={model.name}
+                                key={model.id}
                             >
 
                                 <div className="provider-main">
 
                                     <div className="provider-icon">
+
                                         {model.icon}
+
                                     </div>
 
                                     <div>
@@ -309,11 +454,15 @@ function Settings() {
                                         {model.type}
                                     </span>
 
-                                    <span className="provider-status">
+                                    <span
+                                        className={`provider-status ${getProviderStatusClass(
+                                            model.id
+                                        )}`}
+                                    >
 
                                         <FaCheckCircle />
 
-                                        {model.status}
+                                        {getProviderStatus(model.id)}
 
                                     </span>
 
@@ -347,8 +496,8 @@ function Settings() {
                             </h2>
 
                             <p>
-                                Metrics contributing to the overall reliability
-                                score.
+                                Metrics contributing to the overall
+                                reliability score.
                             </p>
 
                         </div>
@@ -397,7 +546,9 @@ function Settings() {
                 <section className="settings-about">
 
                     <div className="about-icon">
+
                         <FaInfoCircle />
+
                     </div>
 
                     <div>
@@ -408,9 +559,9 @@ function Settings() {
 
                         <p>
                             A model evaluation platform for measuring
-                            consistency, hallucination resistance, information
-                            retention and prompt robustness across multiple
-                            LLM providers.
+                            consistency, hallucination resistance,
+                            information retention and prompt robustness
+                            across multiple LLM providers.
                         </p>
 
                         <span>
@@ -424,7 +575,10 @@ function Settings() {
             </div>
 
         </Layout>
+
     );
+
 }
+
 
 export default Settings;

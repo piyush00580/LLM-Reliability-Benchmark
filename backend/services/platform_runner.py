@@ -41,11 +41,16 @@ class PlatformRunner:
                 )
 
         for model in platform_results:
-
             reports = platform_results[model]["benchmark_reports"]
 
+            successful_reports = [
+                report
+                for report in reports
+                if report.get("status") != "failed"
+            ]
+
             overall = self.reliability_service.compute_overall_score(
-                reports
+                successful_reports
             )
 
             platform_results[model]["overall_reliability"] = overall

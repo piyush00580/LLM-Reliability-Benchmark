@@ -1,3 +1,4 @@
+
 /* =========================================
    Settings Page
 ========================================= */
@@ -251,13 +252,41 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #73d9a2;
     font-size: 11px;
     font-weight: 650;
 }
 
 .provider-status svg {
     font-size: 10px;
+}
+
+.provider-status.available {
+    color: #73d9a2;
+}
+
+.provider-status.checking {
+    color: #e8b875;
+}
+
+.provider-status.unavailable {
+    color: #f08080;
+}
+
+.provider-status.checking svg {
+    animation: provider-status-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes provider-status-pulse {
+
+    0%,
+    100% {
+        opacity: 0.45;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
 }
 
 
@@ -367,6 +396,7 @@
 
 }
 
+
 @media (max-width: 800px) {
 
     .settings-container {
@@ -389,6 +419,7 @@
     }
 
 }
+
 
 @media (max-width: 550px) {
 

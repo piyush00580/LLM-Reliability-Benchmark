@@ -102,6 +102,41 @@ function formatLatency(latency) {
     return `${latency.toFixed(2)}s`;
 }
 
+function isFailedReport(report) {
+    return report?.status === "failed";
+}
+
+function getResultSummary(reports = []) {
+
+    const failedReports = reports.filter(isFailedReport);
+
+    const successfulReports = reports.filter(
+        (report) => !isFailedReport(report)
+    );
+
+    if (failedReports.length === reports.length) {
+        return {
+            title: "The experiment hit a snag.",
+            description: "None of the selected benchmarks completed successfully.",
+            type: "failed",
+        };
+    }
+
+    if (failedReports.length > 0) {
+        return {
+            title: "The experiment returned mixed results.",
+            description: "Some benchmarks completed while others encountered errors.",
+            type: "mixed",
+        };
+    }
+
+    return {
+        title: "The model survived.",
+        description: "All selected benchmarks completed successfully.",
+        type: "success",
+    };
+}
+
 function Benchmark() {
     const [selectedModel, setSelectedModel] = useState("gemini");
 
@@ -153,7 +188,7 @@ function Benchmark() {
             benchmarks: selectedBenchmarks,
         });
 
-        setResults(response.data);
+        setResults(response.data.results);
     } catch (err) {
         console.error("Benchmark execution failed:", err);
 
@@ -195,11 +230,23 @@ function Benchmark() {
 
     const reports = modelResult?.benchmark_reports || [];
 
-    const overallScore =
-        modelResult?.overall_reliability?.overall_score ??
-        modelResult?.overall_score ??
-        null;
+    const failedReports = reports.filter(isFailedReport);
 
+    const successfulReports = reports.filter(
+        (report) => !isFailedReport(report)
+    );
+
+    const resultSummary = getResultSummary(reports);
+
+    const hasSuccessfulReports = successfulReports.length > 0;
+
+    const overallScore = hasSuccessfulReports
+        ? (
+            modelResult?.overall_reliability?.overall_score ??
+            modelResult?.overall_score ??
+            null
+        )
+        : null;
     const resetExperiment = () => {
         setResults(null);
         setError("");
@@ -603,13 +650,23 @@ function Benchmark() {
                                 type="button"
                                 className="run-experiment-btn"
                                 disabled={
+                                    isRunning ||
                                     !inputText.trim() ||
                                     selectedBenchmarks.length === 0
                                 }
                                 onClick={runBenchmark}
                             >
-                                <FaBolt />
-                                Run the experiment
+                                {isRunning ? (
+                                    <>
+                                        <FaSyncAlt className="button-spinner" />
+                                        Running experiment...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FaBolt />
+                                        Run the experiment
+                                    </>
+                                )}
                             </button>
                         </section>
                     </>
@@ -629,10 +686,19 @@ function Benchmark() {
                                     EXPERIMENT COMPLETE
                                 </div>
 
-                                <h1>
-                                    The model{" "}
-                                    <span>survived.</span>
-                                </h1>
+                                <div
+                                    className={`result-summary result-summary-${resultSummary.type}`}
+                                >
+
+                                    <h1>
+                                        {resultSummary.title}
+                                    </h1>
+
+                                    <p>
+                                        {resultSummary.description}
+                                    </p>
+
+                                </div>
 
                                 <p>
                                     Reliability analysis for{" "}
@@ -667,13 +733,17 @@ function Benchmark() {
                                 </div>
 
                                 <div className="score-verdict">
-                                    {overallScore >= 85
+
+                                    {overallScore === null
+                                        ? "Score unavailable"
+                                        : overallScore >= 85
                                         ? "Highly reliable"
                                         : overallScore >= 70
                                         ? "Mostly reliable"
                                         : overallScore >= 50
                                         ? "Needs attention"
                                         : "Under pressure"}
+
                                 </div>
                             </div>
 
@@ -706,63 +776,122 @@ function Benchmark() {
                         </div>
 
                         <div className="result-grid">
-                            {reports.map((report) => {
-                                const score = formatScore(
-                                    report.score
+
+                            {reports.map((report, index) => {
+
+                                const failed = isFailedReport(report);
+
+                                const score = formatScore(report.score);
+
+                                const benchmarkDefinition = BENCHMARKS.find(
+                                    (benchmark) => benchmark.id === report.benchmark
                                 );
 
+                                const benchmarkLabel =
+                                    BENCHMARK_LABELS[report.benchmark] ||
+                                    report.benchmark;
+
+                                const latency =
+                                    report.latency ??
+                                    report.average_latency;
+
                                 return (
+
                                     <div
-                                        className="result-card"
-                                        key={report.benchmark}
+                                        className={`result-card ${
+                                            failed ? "result-card-failed" : ""
+                                        }`}
+                                        key={`${report.benchmark}-${index}`}
                                     >
+
                                         <div className="result-card-top">
+
                                             <div className="result-card-icon">
-                                                {BENCHMARKS.find(
-                                                    (benchmark) =>
-                                                        benchmark.id ===
-                                                        report.benchmark
-                                                )?.icon}
+
+                                                {benchmarkDefinition?.icon}
+
                                             </div>
 
-                                            <span className="result-check">
-                                                <FaCheckCircle />
+                                            <span
+                                                className={`result-check ${
+                                                    failed ? "result-status-failed" : ""
+                                                }`}
+                                            >
+
+                                                {failed ? (
+                                                    <FaExclamationTriangle />
+                                                ) : (
+                                                    <FaCheckCircle />
+                                                )}
+
                                             </span>
+
                                         </div>
 
                                         <span className="result-card-label">
-                                            {BENCHMARK_LABELS[
-                                                report.benchmark
-                                            ] ||
-                                                report.benchmark}
+
+                                            {benchmarkLabel}
+
                                         </span>
 
                                         <div className="result-score">
-                                            {Math.round(score)}
-                                            <span>%</span>
+
+                                            {failed ? "—" : Math.round(score)}
+
+                                            {!failed && <span>%</span>}
+
                                         </div>
 
-                                        <div className="result-progress">
-                                            <div
-                                                style={{
-                                                    width: `${Math.min(
-                                                        score,
-                                                        100
-                                                    )}%`,
-                                                }}
-                                            ></div>
-                                        </div>
+                                        {!failed && (
+
+                                            <div className="result-progress">
+
+                                                <div
+                                                    style={{
+                                                        width: `${Math.min(
+                                                            Math.max(score, 0),
+                                                            100
+                                                        )}%`,
+                                                    }}
+                                                ></div>
+
+                                            </div>
+
+                                        )}
+
+                                        {failed && (
+
+                                            <div className="result-error">
+
+                                                <strong>
+                                                    Benchmark failed
+                                                </strong>
+
+                                                <p>
+                                                    {report.error ||
+                                                        "This benchmark could not be completed."}
+                                                </p>
+
+                                            </div>
+
+                                        )}
 
                                         <div className="result-latency">
+
                                             <FaClock />
-                                            {formatLatency(
-                                                report.latency ??
-                                                    report.average_latency
-                                            )}
+
+                                            {failed
+                                                ? "—"
+                                                : formatLatency(latency)}
+
                                         </div>
+
                                     </div>
+
                                 );
+
                             })}
+
                         </div>
 
                         {reports.length === 0 && (

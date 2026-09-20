@@ -1,3 +1,6 @@
+import os
+import requests
+
 from services.gemini_service import GeminiService
 from services.ollama_service import OllamaService
 from services.groq_service import GroqService
@@ -61,3 +64,50 @@ class LLMFactory:
             LLMFactory.create(model)
             for model in selected_models
         ]
+
+    @staticmethod
+    def provider_status():
+
+        status = {}
+
+        status["gemini"] = {
+            "name": "Google Gemini",
+            "configured": bool(os.getenv("GEMINI_API_KEY")),
+            "type": "cloud"
+        }
+
+        status["groq"] = {
+            "name": "Groq",
+            "configured": bool(os.getenv("GROQ_API_KEY")),
+            "type": "cloud"
+        }
+
+        status["mistral"] = {
+            "name": "Mistral",
+            "configured": bool(os.getenv("MISTRAL_API_KEY")),
+            "type": "cloud"
+        }
+
+        ollama_status = {
+            "name": "Ollama",
+            "configured": False,
+            "reachable": False,
+            "type": "local"
+        }
+
+        try:
+            response = requests.get(
+                "http://localhost:11434/api/tags",
+                timeout=2
+            )
+
+            if response.ok:
+                ollama_status["configured"] = True
+                ollama_status["reachable"] = True
+
+        except requests.RequestException:
+            pass
+
+        status["ollama"] = ollama_status
+
+        return status

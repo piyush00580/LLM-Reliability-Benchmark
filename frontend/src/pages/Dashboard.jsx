@@ -29,9 +29,19 @@ function Dashboard() {
 
             try {
 
-                const data = await getDashboard();
+                const response = await getDashboard();
 
-                setDashboard(data);
+                const dashboardData = response?.data ?? response;
+
+                setDashboard({
+                    ...dashboardData,
+                    recent_runs: Array.isArray(dashboardData?.recent_runs)
+                        ? dashboardData.recent_runs
+                        : [],
+                    chart: Array.isArray(dashboardData?.chart)
+                        ? dashboardData.chart
+                        : [],
+                });
 
             } catch (error) {
 

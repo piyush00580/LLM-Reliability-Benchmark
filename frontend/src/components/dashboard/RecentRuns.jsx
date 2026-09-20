@@ -1,3 +1,4 @@
+
 import {
     FaCircle,
     FaBolt
@@ -18,13 +19,15 @@ function formatModelName(model) {
 
 }
 
-function RecentRuns({ runs }) {
+function RecentRuns({ runs = [] }) {
+
+    const safeRuns = Array.isArray(runs) ? runs : [];
 
     return (
 
         <div className="table-card">
 
-            {runs.length === 0 ? (
+            {safeRuns.length === 0 ? (
 
                 <div className="empty-runs">
 
@@ -51,25 +54,11 @@ function RecentRuns({ runs }) {
 
                             <tr>
 
-                                <th>
-                                    Model
-                                </th>
-
-                                <th>
-                                    Benchmark
-                                </th>
-
-                                <th>
-                                    Score
-                                </th>
-
-                                <th>
-                                    Latency
-                                </th>
-
-                                <th>
-                                    Timestamp
-                                </th>
+                                <th>Model</th>
+                                <th>Benchmark</th>
+                                <th>Score</th>
+                                <th>Latency</th>
+                                <th>Timestamp</th>
 
                             </tr>
 
@@ -77,9 +66,9 @@ function RecentRuns({ runs }) {
 
                         <tbody>
 
-                            {runs.map((run) => (
+                            {safeRuns.map((run, index) => (
 
-                                <tr key={run.id}>
+                                <tr key={run.id || `${run.model}-${run.benchmark}-${index}`}>
 
                                     <td>
 
@@ -90,9 +79,7 @@ function RecentRuns({ runs }) {
                                             </span>
 
                                             <span>
-                                                {formatModelName(
-                                                    run.model
-                                                )}
+                                                {formatModelName(run.model)}
                                             </span>
 
                                         </div>
@@ -102,9 +89,7 @@ function RecentRuns({ runs }) {
                                     <td>
 
                                         <span className="benchmark-badge">
-
                                             {run.benchmark}
-
                                         </span>
 
                                     </td>
@@ -112,9 +97,7 @@ function RecentRuns({ runs }) {
                                     <td>
 
                                         <span className="score-value">
-
                                             {run.score}%
-
                                         </span>
 
                                     </td>
@@ -122,9 +105,7 @@ function RecentRuns({ runs }) {
                                     <td>
 
                                         <span className="latency-value">
-
                                             {run.latency}s
-
                                         </span>
 
                                     </td>
@@ -132,9 +113,7 @@ function RecentRuns({ runs }) {
                                     <td>
 
                                         <span className="timestamp">
-
                                             {run.timestamp}
-
                                         </span>
 
                                     </td>
