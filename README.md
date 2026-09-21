@@ -107,15 +107,22 @@ The primary objectives of the platform are:
 
 The platform supports benchmarking multiple models using the same input and benchmark configuration.
 
-Currently supported models include:
+Currently supported model providers include:
 
 - Google Gemini
 - Ollama
+- Groq
+- Mistral
+
+Controlled baseline models are also available for testing:
+
 - Mock Excellent
 - Mock Average
 - Mock Poor
 
-This allows both real-world model comparison and controlled testing using deterministic baseline models.
+The real model providers support benchmarking across cloud-based and locally hosted
+LLM services. The controlled mock models are used to validate the evaluation,
+scoring, and failure-handling behavior of the platform.
 
 ---
 
@@ -243,7 +250,17 @@ GET  /api/dashboard
 POST /api/benchmark
 POST /api/compare
 GET  /api/history
+GET /api/providers
 GET  /api/export/csv
+
+The `/api/providers` endpoint reports the configuration and availability status
+of supported model providers.
+
+Provider status includes information such as:
+
+- Whether a cloud API key is configured
+- Whether the local Ollama service is reachable
+- The provider type, such as cloud or local
 
 
 ## React Dashboard
@@ -264,60 +281,59 @@ The frontend communicates with the backend through REST APIs.
 
 ## System Architecture
 
-The platform follows a modular layered architecture.
+The platform follows a modular architecture that separates API handling,
+platform execution, model services, benchmark plugins, evaluation metrics,
+reliability calculation, and result storage.
 
-                        ┌─────────────────────┐
-                        │      React UI       │
-                        └──────────┬──────────┘
-                                   │
-                                   ▼
-                        ┌─────────────────────┐
-                        │     REST API        │
-                        └──────────┬──────────┘
-                                   │
-                                   ▼
-                        ┌─────────────────────┐
-                        │  BenchmarkService   │
-                        └──────────┬──────────┘
-                                   │
-                                   ▼
-                        ┌─────────────────────┐
-                        │  PlatformRunner     │
-                        └──────────┬──────────┘
-                                   │
-                    ┌──────────────┴──────────────┐
-                    ▼                             ▼
-          ┌─────────────────┐           ┌─────────────────┐
-          │ Comparison      │           │ PluginManager   │
-          │ Service         │           │                 │
-          └────────┬────────┘           └────────┬────────┘
-                   │                             │
-                   └──────────────┬──────────────┘
-                                  ▼
-                       ┌──────────────────────┐
-                       │ Benchmark Plugins    │
-                       └──────────┬───────────┘
-                                  │
-                                  ▼
-                       ┌──────────────────────┐
-                       │ Evaluation Pipeline  │
-                       └──────────┬───────────┘
-                                  │
-                                  ▼
-                       ┌──────────────────────┐
-                       │ Evaluation Metrics   │
-                       └──────────┬───────────┘
-                                  │
-                                  ▼
-                       ┌──────────────────────┐
-                       │ Reliability Service  │
-                       └──────────┬───────────┘
-                                  │
-                    ┌─────────────┴─────────────┐
-                    ▼                           ▼
-          ┌──────────────────┐        ┌──────────────────┐
-          │ Report Service   │        │ History Service  │
-          └──────────────────┘        └──────────────────┘
+```text
+React Frontend
+      │
+      ▼
+Flask REST API
+      │
+      ▼
+BenchmarkService
+      │
+      ▼
+PlatformRunner
+      │
+      ├──────────────────────┐
+      ▼                      ▼
+LLMFactory             PluginManager
+      │                      │
+      ▼                      ▼
+LLM Services          Benchmark Plugins
+      │                      │
+      └──────────┬───────────┘
+                 ▼
+       EvaluationPipeline
+                 │
+                 ▼
+        Evaluation Metrics
+                 │
+                 ▼
+        Benchmark Results
+                 │
+                 ▼
+       ReliabilityService
+                 │
+       ┌─────────┼─────────┐
+       ▼         ▼         ▼
+    SQLite    Reports    REST API
+    History             Dashboard
+```
+
+### Main Components
+
+- **BenchmarkService:** Coordinates benchmark execution requests.
+- **PlatformRunner:** Runs selected models and benchmark plugins.
+- **LLMFactory:** Creates the required model service.
+- **PluginManager:** Discovers available benchmark plugins.
+- **Benchmark Plugins:** Implement individual reliability tests.
+- **EvaluationPipeline:** Executes reusable evaluation metrics.
+- **ReliabilityService:** Calculates the overall reliability score.
+- **Benchmark History Service:** Stores completed benchmark information.
+- **REST API:** Exposes benchmarking functionality to the frontend and external clients.
 
 
 ## Benchmark Dimensions
@@ -411,43 +427,84 @@ The internal weighting is:
     Readability evaluation provides an additional perspective on the generated output by evaluating its readability characteristics.
 
 
-Supported Models
-Google Gemini
+## Supported Models
 
-The platform supports Google's Gemini models through the Google GenAI Python client.
+The platform supports multiple LLM providers through a common service interface.
+This allows different providers to be evaluated using the same benchmark pipeline.
+
+### Google Gemini:
+
+The platform integrates with Google's Gemini models through the Google GenAI
+Python client.
 
 The active Gemini model is configured through:
 
+```text
 backend/core/config.py
 
-The model can therefore be changed without modifying the benchmark architecture.
+The Gemini API key is loaded from an environment variable:
 
-Ollama
+GEMINI_API_KEY
 
-The platform supports locally hosted models through Ollama.
+Gemini requests include retry handling for rate-limit conditions.
+
+### Ollama:
+
+The platform supports locally hosted LLMs through Ollama.
 
 Current configured model:
 
 llama3.2:3b
 
-Ollama is accessed through its local API.
-
-Default endpoint:
+Default Ollama endpoint:
 
 http://localhost:11434/api/generate
-Mock Models
 
-Three controlled mock models are included:
+Ollama allows the platform to evaluate a locally running model without requiring a cloud API key.
+
+### Groq:
+
+The platform integrates with Groq through its Python client.
+
+Current configured model:
+
+openai/gpt-oss-120b:
+
+The Groq API key is loaded through:
+
+GROQ_API_KEY
+
+Groq provides access to cloud-hosted model inference through an API-based service.
+
+### Mistral:
+
+The platform integrates with Mistral through the Mistral Python client.
+
+Current configured model:
+
+ministral-3b-2512
+
+The Mistral API key is loaded through:
+
+MISTRAL_API_KEY
+
+The Mistral provider is integrated into the same LLM service and benchmarking architecture as the other providers.
+
+Controlled Mock Models
+
+The platform includes three controlled mock models:
 
 Mock Excellent
+
 Mock Average
+
 Mock Poor
 
-These models provide controlled baselines for testing the evaluation and scoring system.
+These models provide predictable baseline behavior for testing the evaluation pipeline, reliability scoring, model comparison, and error-handling workflows.
 
-They are particularly useful for validating whether the benchmarking pipeline correctly distinguishes between different expected reliability levels.
+Mock models are intended for controlled testing and are separate from the real LLM providers.
 
-Datasets
+## Datasets
 
 The platform currently supports the following domain datasets:
 
@@ -460,7 +517,7 @@ Technology	Technology information
 
 Datasets are used by the dataset benchmarking functionality to run predefined evaluation inputs.
 
-Reliability Scoring
+## Reliability Scoring
 
 The platform calculates an overall reliability score using the benchmark scores and configured weights.
 
@@ -477,6 +534,7 @@ The platform also preserves the individual benchmark scores through the reliabil
 
 Example structure:
 
+```json
 {
     "overall_score": 85.4,
     "breakdown": {
@@ -486,36 +544,44 @@ Example structure:
         "Prompt Robustness": 85.6
     }
 }
-Technology Stack
-Backend
-Python
-Flask
-REST API
-SQLite
-pytest
-Machine Learning / NLP
-Sentence Transformers
-spaCy
-Cosine Similarity
-Text-based evaluation metrics
-LLM Integration
-Google Gemini
-Ollama
-Mock LLM services
-Frontend
-React
-Vite
-React Router
-Axios
-Recharts
-React Icons
-JavaScript
-Development Tools
-Git
-GitHub
-VS Code
-Postman
-Project Structure
+```
+## Technology Stack
+    Backend
+    Python
+    Flask
+    REST API
+    SQLite
+    pytest
+    Machine Learning / NLP
+    Sentence Transformers
+    spaCy
+    Cosine Similarity
+    Text-based evaluation metrics
+
+  ### LLM Integration
+    Google Gemini
+    Ollama
+    Groq
+    Mistral
+    Mock LLM services
+
+  ### Frontend
+    React
+    Vite
+    React Router
+    Axios
+    Recharts
+    React Icons
+    JavaScript
+
+  ### Development Tools
+    Git
+    GitHub
+    VS Code
+    Postman
+    
+## Project Structure
+
 LLM-Reliability-Benchmark/
 │
 ├── backend/
@@ -642,36 +708,45 @@ Overall Reliability Score
     ├──────────────► SQLite History
     │
     └──────────────► Reports / API / Dashboard
-Installation
-1. Clone the Repository
-git clone <https://github.com/piyush00580/LLM-Reliability-Benchmark>
 
-Navigate into the project:
+## Installation
+   ### 1. Clone the Repository
+        git clone <https://github.com/piyush00580/LLM-Reliability-Benchmark>
 
-cd LLM-Reliability-Benchmark
-2. Create a Virtual Environment
+        Navigate into the project:
+
+        cd LLM-Reliability-Benchmark
+
+   ### 2. Create a Virtual Environment
 
 On Windows:
 
+```bash
 python -m venv .venv
+```
 
 Activate it:
 
+```bash
 .venv\Scripts\activate
+```
 
 On Linux/macOS:
 
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
-3. Install Backend Dependencies
+```
 
-Install the required Python packages:
+### 3. Install Dependencies
 
-pip install -r backend/requirements.txt
+Install the required Python packages from the project root:
 
-If a requirements file is not present, install the dependencies used by the project environment.
+```bash
+pip install -r requirements.txt
+```
 
-Environment Configuration
+## Environment Configuration
 
 Create a .env file in the project root.
 
@@ -695,7 +770,9 @@ cd backend
 
 Start the Flask API:
 
+```bash
 python api.py
+```
 
 The backend API will run locally.
 
@@ -710,11 +787,14 @@ cd frontend
 
 Install dependencies:
 
+```bash
 npm install
-
+```
 Start the Vite development server:
 
+```bash
 npm run dev
+```
 
 The terminal will display the local development URL.
 
@@ -755,7 +835,7 @@ Example request body:
     "text": "Artificial intelligence is transforming healthcare.",
     "models": [
         "gemini",
-        "mock_excellent"
+        "ollama"
     ],
     "benchmarks": [
         "consistency",
@@ -764,23 +844,42 @@ Example request body:
         "prompt_robustness"
     ]
 }
-Compare Models
-Request
+
+### Compare Models
+
+**Request**
+
+```text
 POST /api/compare
+```
 
-The comparison endpoint evaluates selected models using the requested benchmark configuration.
+The comparison endpoint evaluates multiple selected models using the same input
+text and benchmark configuration.
 
-Example:
+**Example request body:**
 
+```json
 {
-    "text": "Artificial intelligence is transforming healthcare.",
-    "models": [
-        "gemini",
-        "ollama",
-        "mock_excellent"
-    ],
-    "benchmark": "hallucination"
+  "text": "Artificial intelligence is transforming healthcare.",
+  "models": [
+    "gemini",
+    "ollama",
+    "groq"
+  ],
+  "benchmarks": [
+    "consistency",
+    "hallucination",
+    "information_decay",
+    "prompt_robustness"
+  ]
 }
+```
+
+The endpoint returns benchmark results for each selected model. The frontend
+uses these results to compare reliability scores, benchmark performance, and
+latency.
+
+
 Benchmark History
 Request
 GET /api/history
@@ -817,20 +916,22 @@ JSON validation
 Unsupported model detection
 Unsupported benchmark detection
 
-Supported models:
+Supported model identifiers:
 
-gemini
-ollama
-mock_excellent
-mock_average
-mock_poor
+- `gemini`
+- `ollama`
+- `groq`
+- `mistral`
+- `mock_excellent`
+- `mock_average`
+- `mock_poor`
 
-Supported benchmarks:
+Supported benchmark identifiers:
 
-consistency
-hallucination
-information_decay
-prompt_robustness
+- `consistency`
+- `hallucination`
+- `information_decay`
+- `prompt_robustness`
 
 Invalid requests return structured error information instead of silently executing unsupported configurations.
 
@@ -851,21 +952,40 @@ Run the complete test suite from the project root:
 
 pytest
 
-Current test status:
+### Current Test Status
 
-24 passed
+The project uses `pytest` for automated testing.
 
-The tests cover:
+The test suite covers:
 
-API validation
-Core services
-Evaluation metrics
-Reliability scoring
-Model selection
-End-to-end benchmark execution
-Integration between major backend components
+- API validation
+- Core services
+- Evaluation metrics
+- Reliability scoring
+- Model selection
+- End-to-end benchmark execution
+- Failure handling
+- Integration between backend components
 
-The integration test verifies the complete benchmarking pipeline from model selection through benchmark execution and reliability calculation.
+Run the test suite from the project root:
+
+```bash
+pytest
+
+The documented test count should be updated whenever the test suite is executed after a significant code change.
+
+
+```markdown
+- Google Gemini integration
+- Ollama integration
+- Groq integration
+- Mistral integration
+- Provider availability detection
+- Controlled mock models
+- Model comparison
+- Failure-aware benchmark handling
+- Structured API error responses
+
 
 Reporting and History
 
@@ -976,32 +1096,28 @@ Current capabilities include:
  Dataset-based benchmarking
  Google Gemini integration
  Ollama integration
+ Groq integration
+ Mistral integration
  Controlled mock models
  Model comparison
+ Failure-aware benchmark handling
  SQLite benchmark history
  JSON export
  CSV export
  REST API
+ Structured API error responses
  React dashboard integration
  API validation
  Error handling
  Automated testing
  End-to-end integration testing
- Project cleanup
- GitHub documentation
 
-Current automated test status:
+Potential Future Improvements include:
 
-24 / 24 tests passing
-Future Improvements
-
-Potential future improvements include:
-
-Additional real LLM providers
+Additional LLM provider integrations
 More domain-specific datasets
 Additional reliability metrics
 Advanced hallucination detection
-Improved prompt robustness testing
 Statistical analysis across repeated benchmark runs
 Advanced visualization and analytics
 Model performance trend analysis
@@ -1012,3 +1128,11 @@ Additional export formats
 
 These are future possibilities and are not represented as currently implemented features.
 ```
+## Author
+
+**Piyush Sahu**
+
+Computer Engineering Student  
+KJ Somaiya College of Engineering
+
+- GitHub: https://github.com/piyush00580
