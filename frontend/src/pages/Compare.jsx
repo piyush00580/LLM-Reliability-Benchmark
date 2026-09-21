@@ -118,6 +118,13 @@ function Compare() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    const comparisonResults =
+        results &&
+        typeof results === "object" &&
+        !Array.isArray(results)
+            ? results
+            : {};
+
     const toggleModel = (modelId) => {
         setSelectedModels((current) =>
             current.includes(modelId)
@@ -157,24 +164,39 @@ function Compare() {
             setResults(null);
 
             const response = await client.post("/compare", {
-                text: text.trim(),
-                models: selectedModels,
-                benchmarks: selectedBenchmarks,
-            });
+            text: text.trim(),
+            models: selectedModels,
+            benchmarks: selectedBenchmarks,
+        });
 
-            setResults(response.data.results);
+        if (response.data?.status !== "success") {
+            throw new Error(
+                response.data?.message ||
+                "Comparison request failed."
+            );
+        }
+
+        setResults(response.data.results);
         } catch (err) {
-            console.error("Comparison failed:", err);
+
+            console.error(
+                "Model comparison failed:",
+                err
+            );
 
             const message =
-                err.response?.data?.detail ||
+                err.response?.data?.details?.message ||
                 err.response?.data?.message ||
+                err.response?.data?.detail ||
                 err.message ||
-                "Something went wrong while comparing the models.";
+                "Something went wrong while comparing models.";
 
             setError(message);
+
         } finally {
+
             setLoading(false);
+
         }
     };
 
@@ -203,18 +225,31 @@ function Compare() {
     };
 
     const getWinner = () => {
-        if (!results) return null;
+        if (!Object.keys(comparisonResults).length) {
+            return null;
+        }
 
-        const entries = Object.entries(results);
+        const entries = Object.entries(comparisonResults).filter(
+            ([, modelResult]) => {
+                const score = getOverallScore(modelResult);
 
-        if (!entries.length) return null;
+                return (
+                    typeof score === "number" &&
+                    Number.isFinite(score)
+                );
+            }
+        );
+
+        if (!entries.length) {
+            return null;
+        }
 
         return entries.reduce((best, current) => {
             const currentScore =
-                current[1]?.overall_reliability?.overall_score ?? -1;
+                getOverallScore(current[1]) ?? -1;
 
             const bestScore =
-                best[1]?.overall_reliability?.overall_score ?? -1;
+                getOverallScore(best[1]) ?? -1;
 
             return currentScore > bestScore ? current : best;
         });
@@ -502,7 +537,13 @@ function Compare() {
                                 <div className="winner-info">
                                     <span>TOP RELIABILITY SCORE</span>
 
-                                    <h3>{winner[0]}</h3>
+                                    <h3>
+                                        {getModelName(
+                                            selectedModels.find(
+                                                (id) => getModelName(id) === winner[0]
+                                            ) || winner[0]
+                                        )}
+                                    </h3>
 
                                     <p>
                                         {getOverallScore(winner[1])?.toFixed(
@@ -522,7 +563,7 @@ function Compare() {
 
                         {/* SCORE CARDS */}
                         <div className="model-results-grid">
-                            {Object.entries(results).map(
+                            {Object.entries(comparisonResults).map(
                                 ([modelName, modelResult]) => {
                                     const score =
                                         getOverallScore(modelResult) || 0;
@@ -616,7 +657,7 @@ function Compare() {
                                                     </td>
 
                                                     {Object.entries(
-                                                        results
+                                                        comparisonResults
                                                     ).map(
                                                         ([
                                                             modelName,
@@ -658,7 +699,7 @@ function Compare() {
                                                 </strong>
                                             </td>
 
-                                            {Object.entries(results).map(
+                                            {Object.entries(comparisonResults).map(
                                                 ([modelName, modelResult]) => {
                                                     const score =
                                                         getOverallScore(
