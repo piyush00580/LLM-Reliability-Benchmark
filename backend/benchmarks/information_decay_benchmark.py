@@ -23,9 +23,14 @@ class InformationDecayBenchmark(Benchmark):
         self.pipeline.add_metric(CompressionEvaluator())
         self.pipeline.add_metric(ReadabilityEvaluator())
 
-    def run(self, text: str, iterations: int = 5):
+    def run(self, text: str, iterations: int = 2):
 
         experiment_start = time.perf_counter()
+
+        print(
+        f"\n[INFO RETENTION] Starting "
+        f"{iterations} iterations..."
+        )
 
         results = []
 
@@ -70,16 +75,34 @@ class InformationDecayBenchmark(Benchmark):
 
         for i in range(1, iterations + 1):
 
+            print(
+            f"[INFO RETENTION] Starting iteration {i}/{iterations}"
+            )
+
             prompt = (
                 "Summarize the following text while preserving as much "
                 "important information as possible:\n\n"
                 f"{current_text}"
             )
 
+            generation_start = time.perf_counter()
+
             summary, latency = self.llm.generate_response(prompt)
+
+            print(
+                f"[INFO RETENTION] Iteration {i} generation completed "
+                f"in {time.perf_counter() - generation_start:.2f}s"
+            )
+
+            embedding_start = time.perf_counter()
 
             summary_embedding = self.embedding.get_embedding(
                 summary
+            )
+
+            print(
+                f"[INFO RETENTION] Iteration {i} embedding completed "
+                f"in {time.perf_counter() - embedding_start:.2f}s"
             )
 
             evaluation = self.pipeline.evaluate(

@@ -23,12 +23,13 @@ class ConsistencyBenchmark(Benchmark):
         self.pipeline.add_metric(CompressionEvaluator())
         self.pipeline.add_metric(ReadabilityEvaluator())
 
-    def run(self, text, iterations=5):
+    def run(self, text, iterations=2):
 
         experiment_start = time.perf_counter()
 
         results = []
         summaries = []
+        summary_embeddings = []
         latencies = []
 
         metrics_summary = {}
@@ -45,14 +46,13 @@ class ConsistencyBenchmark(Benchmark):
             summary, latency = self.llm.generate_response(prompt)
 
             summary_embedding = self.embedding.get_embedding(summary)
+            summary_embeddings.append(summary_embedding)
             evaluation = self.pipeline.evaluate(
                 embedding1=original_embedding,
                 embedding2=summary_embedding,
                 original_text=text,
                 summary=summary
             )
-
-
 
             results.append({
                 "iteration": i + 1,
@@ -64,7 +64,9 @@ class ConsistencyBenchmark(Benchmark):
             summaries.append(summary)
             latencies.append(latency)
 
-        consistency_score = self.calculate_consistency(summaries)
+        consistency_score = self.calculate_consistency(
+            summary_embeddings
+        )
 
         metric_names = results[0]["metrics"].keys()
 
@@ -100,25 +102,24 @@ class ConsistencyBenchmark(Benchmark):
             "results": results
     }
 
-    def calculate_consistency(self, summaries):
-        if len(summaries) < 2:
+    def calculate_consistency(self, embeddings):
+        if len(embeddings) < 2:
             return 1.0
-
-        embeddings = [
-            self.embedding.get_embedding(summary)
-            for summary in summaries
-        ]
 
         similarity = SimilarityEvaluator()
 
         scores = []
 
         for emb1, emb2 in combinations(embeddings, 2):
-            score = similarity.evaluate(
-            embedding1=emb1,
-            embedding2=emb2
-            )["score"]
 
-            scores.append(score)
+                score = similarity.evaluate(
+                    embedding1=emb1,
+                    embedding2=emb2
+                )["score"]
+
+                scores.append(score)
+
+        if not scores:
+            return 0.0
 
         return sum(scores) / len(scores)

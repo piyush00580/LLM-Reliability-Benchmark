@@ -157,21 +157,28 @@ def test_ollama_success(mock_post):
         json={
             "model": service.model_name,
             "prompt": "Test prompt",
-            "stream": False
+            "stream": False,
+            "keep_alive": "5m",
+            "options": {
+                "temperature": 0.2,
+                "num_predict": 256
+            }
         },
-        timeout=120
+        timeout=service.timeout
     )
 
 
 @patch("services.ollama_service.requests.post")
 def test_ollama_connection_error(mock_post):
     import requests
+    import pytest
 
     mock_post.side_effect = requests.exceptions.ConnectionError()
 
     service = OllamaService()
 
-    text, latency = service.generate_response("Test prompt")
-
-    assert "server is unavailable" in text.lower()
-    assert latency >= 0
+    with pytest.raises(
+        RuntimeError,
+        match="Ollama server is unavailable"
+    ):
+        service.generate_response("Test prompt")

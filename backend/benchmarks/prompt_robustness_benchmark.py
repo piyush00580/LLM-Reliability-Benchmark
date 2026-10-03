@@ -14,15 +14,20 @@ class PromptRobustnessBenchmark(Benchmark):
 
     PROMPTS = [
 
-        "Summarize the following text while preserving all important information:\n\n{text}",
+            (
+                "Summarize the following text while preserving "
+                "all important information:\n\n{text}"
+            ),
 
-        "Provide a concise summary of the following text:\n\n{text}",
+            (
+                "Provide a concise summary of the following text "
+                "without changing the facts:\n\n{text}"
+            ),
 
-        "Write an executive summary of the following text:\n\n{text}",
-
-        "Summarize the key ideas from the following passage:\n\n{text}",
-
-        "Summarize the following text in under 150 words:\n\n{text}"
+            (
+                "Write an executive summary of the following text "
+                "while retaining important entities and numbers:\n\n{text}"
+            )
 
     ]
 

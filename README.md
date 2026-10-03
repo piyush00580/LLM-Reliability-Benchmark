@@ -1136,3 +1136,48 @@ Computer Engineering Student
 KJ Somaiya College of Engineering
 
 - GitHub: https://github.com/piyush00580
+
+
+## Screenshots and Demo
+
+### Dashboard
+
+The dashboard provides an overview of benchmark activity, reliability metrics, and recent evaluation runs.
+
+![Dashboard](docs/screenshots/dashboard_1.png)
+![Dashboard](docs/screenshots/dashboard_2.png)
+![Dashboard](docs/screenshots/dashboard_3.png)
+
+### Benchmark Results
+
+The benchmarking interface allows users to select an LLM, choose reliability dimensions, and view evaluation results.
+
+![Benchmark Results](docs/screenshots/bench_1.png)
+![Benchmark Results](docs/screenshots/bench_2.png)
+![Benchmark Results](docs/screenshots/bench_3.png)
+(gotta paste results too)
+
+### Model Comparison
+
+The comparison interface evaluates multiple models using the same input and benchmark configuration.
+
+![Model Comparison](docs/screenshots/compare_1.png)
+![Model Comparison](docs/screenshots/compare_2.png)
+![Model Comparison](docs/screenshots/compare_3.png)
+(paste results for this too)
+
+### Reports and History
+
+Benchmark history allows previous evaluation runs to be reviewed and analyzed.
+
+![Reports](docs/screenshots/reports.png)
+(REPLACE THIS IF U WANT WITH NEWLY UPDATED REPORTS)
+
+
+### Provider Settings
+
+The settings page displays supported providers and their availability status.
+
+![Settings](docs/screenshots/settings_1.png)
+![Settings](docs/screenshots/settings_2.png)
+![Settings](docs/screenshots/settings_3.png)
